@@ -2,10 +2,14 @@ package com.example.spotted.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+// Primary — Rosso UniBO (Pantone 1805 / #BB2E29)
+val UniboRed80    = Color(0xFFFFB4AE)
+val UniboRed40    = Color(0xFFBB2E29)
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+// Secondary — Grigio Istituzionale (Pantone Cool Gray 11 / #53565A)
+val UniboGrey80   = Color(0xFFC4C5CA)
+val UniboGrey40   = Color(0xFF53565A)
+
+// Tertiary — Oro Accademico (complemento caldo al rosso istituzionale)
+val UniboGold80   = Color(0xFFEDDC93)
+val UniboGold40   = Color(0xFF8B6F00)

@@ -1,5 +1,154 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.Spotted" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- ════════════════════════════════════════════════════
+         PALETTE UFFICIALE — Alma Mater Studiorum · UniBO
+         ════════════════════════════════════════════════════
+
+         Primary  → Rosso Istituzionale  (Pantone 1805 / #BB2E29)
+         Secondary→ Grigio Istituzionale (Pantone Cool Gray 11 / #53565A)
+         Tertiary → Oro Accademico       (complemento storico)
+    ════════════════════════════════════════════════════ -->
+
+    <!-- Rosso Istituzionale — tonal scale -->
+    <color name="unibo_red_10">#410001</color>   <!-- on-container (dark) -->
+    <color name="unibo_red_40">#BB2E29</color>   <!-- primary (OFFICIALE) -->
+    <color name="unibo_red_80">#FFB4AE</color>   <!-- primary (dark theme) -->
+    <color name="unibo_red_90">#FFDAD6</color>   <!-- primary container    -->
+
+    <!-- Grigio Istituzionale — tonal scale -->
+    <color name="unibo_grey_10">#1A1C1E</color>  <!-- on-container (dark) -->
+    <color name="unibo_grey_40">#53565A</color>  <!-- secondary (OFFICIALE)-->
+    <color name="unibo_grey_80">#C4C5CA</color>  <!-- secondary (dark theme)-->
+    <color name="unibo_grey_90">#E1E2E8</color>  <!-- secondary container   -->
+
+    <!-- Oro Accademico — tonal scale -->
+    <color name="unibo_gold_10">#2B2000</color>  <!-- on-container (dark) -->
+    <color name="unibo_gold_40">#8B6F00</color>  <!-- tertiary             -->
+    <color name="unibo_gold_80">#EDDC93</color>  <!-- tertiary (dark theme)-->
+    <color name="unibo_gold_90">#F9EDBB</color>  <!-- tertiary container   -->
+
+    <!-- Neutral — background, surface, testo -->
+    <color name="neutral_10">#1C1B1F</color>
+    <color name="neutral_99">#FFFBFE</color>
+
+    <!-- Neutral Variant — outline, surface variant -->
+    <color name="neutral_variant_30">#534341</color>
+    <color name="neutral_variant_50">#857370</color>
+    <color name="neutral_variant_90">#F4DDDB</color>
+
+    <!-- Error -->
+    <color name="error_10">#410E0B</color>
+    <color name="error_40">#B3261E</color>
+    <color name="error_90">#F9DEDC</color>
+
+
+    <!-- ════════════════════════════════════════════════════
+         LIGHT THEME  (res/values/themes.xml)
+    ════════════════════════════════════════════════════ -->
+    <style name="Theme.Spotted" parent="Theme.MaterialComponents.Light.NoActionBar">
+
+        <!-- Primary: Rosso UniBO -->
+        <item name="colorPrimary">@color/unibo_red_40</item>
+        <item name="colorOnPrimary">@android:color/white</item>
+        <item name="colorPrimaryContainer">@color/unibo_red_90</item>
+        <item name="colorOnPrimaryContainer">@color/unibo_red_10</item>
+
+        <!-- Secondary: Grigio Istituzionale -->
+        <item name="colorSecondary">@color/unibo_grey_40</item>
+        <item name="colorOnSecondary">@android:color/white</item>
+        <item name="colorSecondaryContainer">@color/unibo_grey_90</item>
+        <item name="colorOnSecondaryContainer">@color/unibo_grey_10</item>
+
+        <!-- Tertiary: Oro Accademico -->
+        <item name="colorTertiary">@color/unibo_gold_40</item>
+        <item name="colorOnTertiary">@android:color/white</item>
+        <item name="colorTertiaryContainer">@color/unibo_gold_90</item>
+        <item name="colorOnTertiaryContainer">@color/unibo_gold_10</item>
+
+        <!-- Error -->
+        <item name="colorError">@color/error_40</item>
+        <item name="colorOnError">@android:color/white</item>
+        <item name="colorErrorContainer">@color/error_90</item>
+        <item name="colorOnErrorContainer">@color/error_10</item>
+
+        <!-- Background & Surface -->
+        <item name="android:colorBackground">@color/neutral_99</item>
+        <item name="colorOnBackground">@color/neutral_10</item>
+        <item name="colorSurface">@color/neutral_99</item>
+        <item name="colorOnSurface">@color/neutral_10</item>
+        <item name="colorSurfaceVariant">@color/neutral_variant_90</item>
+        <item name="colorOnSurfaceVariant">@color/neutral_variant_30</item>
+        <item name="colorOutline">@color/neutral_variant_50</item>
+
+        <!-- System UI — status bar rosso UniBO, icone bianche -->
+        <item name="android:statusBarColor">@color/unibo_red_40</item>
+        <item name="android:windowLightStatusBar">false</item>
+
+        <!-- System UI — navigation bar bianca, icone scure -->
+        <item name="android:navigationBarColor">@color/neutral_99</item>
+        <item name="android:windowLightNavigationBar">true</item>
+
+    </style>
+
+
+    <!-- ════════════════════════════════════════════════════
+         DARK THEME
+         Da copiare in res/values-night/themes.xml
+    ════════════════════════════════════════════════════ -->
+    <style name="Theme.Spotted.Dark" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+
+        <!-- Primary -->
+        <item name="colorPrimary">@color/unibo_red_80</item>
+        <item name="colorOnPrimary">@color/unibo_red_10</item>
+        <item name="colorPrimaryContainer">@color/unibo_red_40</item>
+        <item name="colorOnPrimaryContainer">@color/unibo_red_90</item>
+
+        <!-- Secondary -->
+        <item name="colorSecondary">@color/unibo_grey_80</item>
+        <item name="colorOnSecondary">@color/unibo_grey_10</item>
+        <item name="colorSecondaryContainer">@color/unibo_grey_40</item>
+        <item name="colorOnSecondaryContainer">@color/unibo_grey_90</item>
+
+        <!-- Tertiary -->
+        <item name="colorTertiary">@color/unibo_gold_80</item>
+        <item name="colorOnTertiary">@color/unibo_gold_10</item>
+        <item name="colorTertiaryContainer">@color/unibo_gold_40</item>
+        <item name="colorOnTertiaryContainer">@color/unibo_gold_90</item>
+
+        <!-- Error -->
+        <item name="colorError">@color/error_90</item>
+        <item name="colorOnError">@color/error_10</item>
+        <item name="colorErrorContainer">@color/error_40</item>
+        <item name="colorOnErrorContainer">@color/error_90</item>
+
+        <!-- Background & Surface (dark) -->
+        <item name="android:colorBackground">@color/neutral_10</item>
+        <item name="colorOnBackground">@color/neutral_99</item>
+        <item name="colorSurface">@color/neutral_10</item>
+        <item name="colorOnSurface">@color/neutral_99</item>
+        <item name="colorSurfaceVariant">@color/neutral_variant_30</item>
+        <item name="colorOnSurfaceVariant">@color/neutral_variant_90</item>
+        <item name="colorOutline">@color/neutral_variant_50</item>
+
+        <!-- System UI dark -->
+        <item name="android:statusBarColor">@color/neutral_10</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:navigationBarColor">@color/neutral_10</item>
+        <item name="android:windowLightNavigationBar">false</item>
+
+    </style>
+
+
+    <!-- ════════════════════════════════════════════════════
+         SPLASH SCREEN (androidx.core:core-splashscreen)
+         Richiede: implementation "androidx.core:core-splashscreen:1.0.1"
+         Da usare in AndroidManifest come tema iniziale dell'Activity
+    ════════════════════════════════════════════════════ -->
+    <style name="Theme.Spotted.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/unibo_red_40</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.Spotted</item>
+    </style>
+
 </resources>
