@@ -1,10 +1,14 @@
 package com.example.spotted
 
-import FeedScreen
+
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,6 +16,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -30,11 +35,28 @@ import com.example.spotted.ui.theme.SpottedTheme
 import com.example.spotted.utils.NavigationRoute
 
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
-import dev.chrisbanes.haze.HazeDefaults
+import androidx.core.content.ContextCompat
+import androidx.navigation.toRoute
+import com.example.spotted.pages.ChatInput
+import com.example.spotted.pages.ChatScreen
+import com.example.spotted.pages.LoginScreen
+import com.example.spotted.pages.ShareScreen
+import com.example.spotted.ui.screens.FeedScreen
+import com.example.spotted.utils.gps.MultiplePermissionHandler
+import com.example.spotted.utils.gps.PermissionStatus
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.HazeStyle
+import dev.chrisbanes.haze.HazeTint
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
+import kotlin.collections.associateWith
+
+
+
 
 
 class MainActivity : ComponentActivity() {
@@ -54,40 +76,63 @@ class MainActivity : ComponentActivity() {
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentDestination = navBackStackEntry?.destination
 
-                // Controlla se NON siamo nella pagina Profilo
-                val showBottomBar = currentDestination?.hasRoute(NavigationRoute.Profile::class) == false
+
+                val showBackButton =
+                    (currentDestination?.hasRoute(NavigationRoute.Chat::class) == true) or
+                            (currentDestination?.hasRoute(NavigationRoute.Profile::class) == true)
+                val showNavigationBar =
+                    (currentDestination?.hasRoute(NavigationRoute.Login::class) == true) or
+                            (currentDestination?.hasRoute(NavigationRoute.Chat::class) == true) or
+                            (currentDestination?.hasRoute(NavigationRoute.Profile::class) == true)
+
+                val showTopBar =
+                    (currentDestination?.hasRoute(NavigationRoute.Login::class) == true)
+
+                val showChatInput =
+                    (currentDestination?.hasRoute(NavigationRoute.Chat::class) == true)
 
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     bottomBar = {
-                        SectionsBar(
-                            navController = navController,
-                            modifier = Modifier.hazeChild(
-                                state = hazeState,
-                                style = HazeDefaults.style(
-                                    backgroundColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.20f),
-                                    blurRadius = 20.dp,
-                                    noiseFactor = 0.1f,
-                                    tint = Color.White.copy(alpha = 0.1f)  // ✅ Color, non lista
+                        if (!showNavigationBar) {
+                            SectionsBar(
+                                navController = navController,
+                                modifier = Modifier.hazeChild(
+                                    state = hazeState,
+                                    style = HazeStyle(
+                                        backgroundColor = MaterialTheme.colorScheme.surfaceContainer.copy(
+                                            alpha = 1.9f
+                                        ),
+                                        tint = HazeTint(Color.White.copy(alpha = 0.05f)),
+                                        blurRadius = 15.dp,
+
+                                        )
                                 )
                             )
-                        )
+                        } else if (showChatInput) {
+                            ChatInput()
+                        }
+
                     },
                     topBar = {
-                        FloatingProfile(
-                            modifier = Modifier.hazeChild(
-                                state = hazeState,
-                                style = HazeDefaults.style(
-                                    backgroundColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.20f),
-                                    blurRadius = 20.dp
-                                    // tint omesso → usa il default della seconda overload (HazeTint)
-                                    // più pulito di passare Color.Unspecified
-                                )
-                            ),
-                            onNavigateToProfile = { navController.navigate(NavigationRoute.Profile) },
-                            onNavigateBack = { navController.popBackStack() },
-                            show = showBottomBar
-                        )
+                        if (!showTopBar) {
+                            FloatingProfile(
+                                modifier = Modifier.hazeChild(
+                                    state = hazeState,
+                                    style = HazeStyle(
+                                        backgroundColor = MaterialTheme.colorScheme.surfaceContainer.copy(
+                                            alpha = 1.9f
+                                        ),
+                                        tint = HazeTint(Color.White.copy(alpha = 0.05f)),
+                                        blurRadius = 15.dp,
+                                    )
+                                ),
+                                onNavigateToProfile = { navController.navigate(NavigationRoute.Profile) },
+                                onNavigateBack = { navController.popBackStack() },
+                                show = showBackButton
+                            )
+                        }
+
                     }
                 ) { innerPadding ->
                     // Ignoriamo 'innerPadding' per fare andare il NavGraph Edge-to-Edge (sotto le barre)
@@ -96,23 +141,43 @@ class MainActivity : ComponentActivity() {
                             .fillMaxSize()
                             .haze(state = hazeState) // Registriamo questo Box come sfondo da sfocare
                     ) {
-                        NavGraph(navController,innerPadding)
+                        NavGraph(navController, innerPadding)
                     }
                 }
             }
         }
     }
-}
 
-@Composable
-fun NavGraph(navController : NavHostController, innerPadding: PaddingValues){
-    NavHost(
-        navController = navController,
-        startDestination = NavigationRoute.Feed
-    ){
-        composable<NavigationRoute.Feed> { FeedScreen(innerPadding)  }
-        composable<NavigationRoute.Map> { MapScreen(innerPadding) }
-        composable<NavigationRoute.Profile> { ProfileScreen(innerPadding) }
-        composable<NavigationRoute.Following> { FollowingScreen(innerPadding) }
+
+    @Composable
+    fun NavGraph(navController: NavHostController, innerPadding: PaddingValues) {
+
+
+        NavHost(
+            navController = navController,
+            startDestination = NavigationRoute.Login
+        ) {
+            composable<NavigationRoute.Feed> { FeedScreen({}, innerPadding) }
+            composable<NavigationRoute.Map> { MapScreen(innerPadding) }
+            composable<NavigationRoute.Profile> { ProfileScreen(innerPadding) }
+            composable<NavigationRoute.Following> {
+                FollowingScreen(innerPadding, navigate = { chat ->
+                    navController.navigate(NavigationRoute.Chat(chatId = chat))
+
+                })
+            }
+            composable<NavigationRoute.Login> {
+                LoginScreen(innerPadding, {
+                    navController.navigate(
+                        NavigationRoute.Feed
+                    )
+                })
+            }
+            composable<NavigationRoute.Chat> { backStackEntry ->
+                val chatRoute: NavigationRoute.Chat = backStackEntry.toRoute()
+                ChatScreen(chatId = chatRoute.chatId, innerPadding = innerPadding)
+            }
+            composable<NavigationRoute.Share> { ShareScreen(innerPadding) }
+        }
     }
 }

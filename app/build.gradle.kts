@@ -57,6 +57,13 @@ dependencies {
     implementation("com.google.android.material:material:1.12.0")
     implementation("androidx.core:core-splashscreen:1.0.1")
     implementation("dev.chrisbanes.haze:haze:1.1.1")
+    implementation(libs.androidx.compose.foundation)
+    implementation(libs.engage.core)
+    implementation("org.osmdroid:osmdroid-android:6.1.14")
+    implementation("com.google.android.gms:play-services-location:21.3.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.0")
+    implementation(libs.androidbrowserhelper)
+    implementation("androidx.activity:activity-compose:1.10.0-alpha03")
 
 
     testImplementation(libs.junit)

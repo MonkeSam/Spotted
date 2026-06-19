@@ -3,6 +3,7 @@ package com.example.spotted.common
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
@@ -12,6 +13,7 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -23,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.AlignmentLine
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hasRoute // IMPORTANTE per il controllo type-safe
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -45,7 +48,9 @@ fun SectionsBar(
     val items = listOf(
         BarItem(Sections.FEED.name, Icons.Filled.Home, NavigationRoute.Feed),
         BarItem(Sections.FOLLOWING.name, Icons.Filled.Favorite, NavigationRoute.Following),
-        BarItem(Sections.MAP.name, Icons.Filled.LocationOn, NavigationRoute.Map)
+        BarItem(Sections.SHARE.name, Icons.Filled.Add, NavigationRoute.Share),
+        BarItem(Sections.MAP.name, Icons.Filled.LocationOn, NavigationRoute.Map),
+
     )
 
     // 3. Osserviamo la rotta corrente in modo reattivo
@@ -97,19 +102,21 @@ fun FloatingProfile(
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
             containerColor = Color.Transparent,
             actionIconContentColor = Color.Black,
+
         ),
-        actions = {
-            if(show){
-                FilledIconButton(onClick =  onNavigateToProfile ) {
-                    Icon(Icons.Filled.Person, Sections.PROFILE.name )
-                }
-            }
-            else{
-                FilledIconButton(onClick = onNavigateBack) {
+        navigationIcon = {
+            if (show){
+                IconButton(onClick = onNavigateBack) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back_from_profile")
                 }
             }
 
+        },
+
+        actions = {
+                FilledIconButton(onClick =  onNavigateToProfile ) {
+                    Icon(Icons.Filled.Person, Sections.PROFILE.name)
+                }
         }
     )
 }
