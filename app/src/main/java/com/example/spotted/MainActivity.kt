@@ -1,14 +1,10 @@
 package com.example.spotted
 
 
-import android.Manifest
-import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,8 +12,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.NavDestination.Companion.hasRoute
@@ -26,37 +23,22 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.example.spotted.common.FloatingProfile
 import com.example.spotted.common.SectionsBar
-import com.example.spotted.pages.FollowingScreen
-import com.example.spotted.pages.MapScreen
-import com.example.spotted.pages.ProfileScreen
-import com.example.spotted.ui.theme.SpottedTheme
-import com.example.spotted.utils.NavigationRoute
-
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.graphics.Color
-import androidx.core.content.ContextCompat
-import androidx.navigation.toRoute
 import com.example.spotted.pages.ChatInput
 import com.example.spotted.pages.ChatScreen
 import com.example.spotted.pages.LoginScreen
-import com.example.spotted.pages.ShareScreen
+import com.example.spotted.pages.MapScreen
+import com.example.spotted.pages.ProfileScreen
 import com.example.spotted.ui.screens.FeedScreen
-import com.example.spotted.utils.gps.MultiplePermissionHandler
-import com.example.spotted.utils.gps.PermissionStatus
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
+import com.example.spotted.ui.theme.SpottedTheme
+import com.example.spotted.utils.NavigationRoute
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
-import kotlin.collections.associateWith
-
-
-
 
 
 class MainActivity : ComponentActivity() {
@@ -157,15 +139,15 @@ class MainActivity : ComponentActivity() {
             navController = navController,
             startDestination = NavigationRoute.Login
         ) {
-            composable<NavigationRoute.Feed> { FeedScreen({}, innerPadding) }
+            composable<NavigationRoute.Feed> { FeedScreen(innerPadding) }
             composable<NavigationRoute.Map> { MapScreen(innerPadding) }
             composable<NavigationRoute.Profile> { ProfileScreen(innerPadding) }
-            composable<NavigationRoute.Following> {
-                FollowingScreen(innerPadding, navigate = { chat ->
-                    navController.navigate(NavigationRoute.Chat(chatId = chat))
-
-                })
-            }
+//            composable<NavigationRoute.Following> {
+//                FollowingScreen(innerPadding, navigate = { chat ->
+//                    navController.navigate(NavigationRoute.Chat(chatId = chat))
+//
+//                })
+//            }
             composable<NavigationRoute.Login> {
                 LoginScreen(innerPadding, {
                     navController.navigate(
@@ -177,7 +159,7 @@ class MainActivity : ComponentActivity() {
                 val chatRoute: NavigationRoute.Chat = backStackEntry.toRoute()
                 ChatScreen(chatId = chatRoute.chatId, innerPadding = innerPadding)
             }
-            composable<NavigationRoute.Share> { ShareScreen(innerPadding) }
+//            composable<NavigationRoute.Share> { ShareScreen(innerPadding) }
         }
     }
 }

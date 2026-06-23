@@ -1,84 +1,58 @@
 package com.example.spotted.ui.screens
 
-import android.graphics.drawable.Icon
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.twotone.Close
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.spotted.data.model.Post
+import com.example.spotted.data.view.FeedViewModel
 import com.example.spotted.ui.components.SwipeCardStack
 import com.example.spotted.ui.components.rememberSwipeCardController
-import kotlinx.coroutines.launch
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
-// ─── Modello dati ─────────────────────────────────────────────────────────────
-
-data class Spot(
-    val id: Int,
-    val category: SpotCategory,
-    val title: String,
-    val description: String,
-    val authorLabel: String = "Anonimo",
-    val timeAgo: String,
-    val followerCount: Int,
-)
-
-enum class SpotCategory(val label: String, val emoji: String ) {
-    EVENT ("Evento",  "🎉"),
-    PLACE ("Luogo",   "📍"),
-    PERSON("Persona", "👤"),
-    OBJECT("Oggetto", "📦"),
-    OTHER ("Altro",   "❓"),
-}
-// ─── Dati di esempio ─────────────────────────────────────────────────────────
-// TODO: sostituire con ViewModel + repository
-
-private val sampleSpots = listOf(
-    Spot(1, SpotCategory.EVENT,  "Aperitivo in Piazza Verdi",   "Cerchiamo gente stasera alle 19, siamo già in 3!", timeAgo = "12 min fa", followerCount = 47),
-    Spot(2, SpotCategory.PLACE,  "Tavolo libero Aula C",        "Secondo piano vicino alla finestra, posti da 4.",  timeAgo = "5 min fa",  followerCount = 23),
-    Spot(3, SpotCategory.PERSON, "Ragazza giacca rossa",        "Era in coda alla macchinetta del caffè al DISI.", timeAgo = "34 min fa", followerCount = 89),
-    Spot(4, SpotCategory.OBJECT, "Chiavi trovate in Navile",    "Portachiavi azzurro lasciato alla reception.",     timeAgo = "1h fa",     followerCount = 12),
-    Spot(5, SpotCategory.EVENT,  "Studio di gruppo Statistica", "Chi viene? Biblioteca centrale ore 15.",           timeAgo = "8 min fa",  followerCount = 31),
-)
-
-// ─── FeedScreen ───────────────────────────────────────────────────────────────
-//
-// NON ha Scaffold proprio: usa quello della MainActivity.
-// NON riceve innerPadding: la MainActivity ignora il padding per l'edge-to-edge.
-//
-// Il parametro [onSpotFollowed] corrisponde al lambda { } passato in NavGraph:
-//   composable<NavigationRoute.Feed> { FeedScreen() { } }
-//
-// I bottoni swipe flottano sopra la SectionsBar glass tramite WindowInsets.
 
 @Composable
 fun FeedScreen(
-    onSpotFollowed: (Spot) -> Unit = {},
     innerPadding: PaddingValues
 ) {
-    val scope      = rememberCoroutineScope()
+    val viewModel : FeedViewModel = viewModel()
+    val spots by viewModel.posts.collectAsState()
     val controller = rememberSwipeCardController()
-    val spots      = remember { sampleSpots }
 
     // Box occupa tutto lo spazio assegnato dal NavHost (già fillMaxSize dal
     // Scaffold della MainActivity), con le card che vanno dietro le barre glass.
@@ -91,8 +65,8 @@ fun FeedScreen(
 
         SwipeCardStack(
             items         = spots,
-            onSwipedRight = onSpotFollowed,
-            onSwipedLeft  = { /* spot ignorato — nessuna azione */ },
+            onSwipedRight = { viewModel.swipeRight(it.id) },
+            onSwipedLeft  = { viewModel.swipeLeft(it.id) },
             controller    = controller,
             modifier      = Modifier.fillMaxSize(),
             emptyContent  = { EmptyFeedState() },
@@ -106,9 +80,10 @@ fun FeedScreen(
 
 // ─── SpotCard ─────────────────────────────────────────────────────────────────
 
+@OptIn(ExperimentalTime::class)
 @Composable
 fun SpotCard(
-    spot:          Spot,
+    spot:          Post,
     swipeProgress: Float,
     modifier:      Modifier = Modifier,
 ) {
@@ -117,7 +92,7 @@ fun SpotCard(
             .fillMaxSize()
             .clip(RoundedCornerShape(24.dp))
             .background(
-                when(spot.id % 3){
+                when(spot.category % 3){
                     0 -> MaterialTheme.colorScheme.primary
                     1 -> MaterialTheme.colorScheme.secondary
                     2 -> MaterialTheme.colorScheme.tertiary
@@ -137,7 +112,7 @@ fun SpotCard(
                     shape = RoundedCornerShape(8.dp),
                 ) {
                     Text(
-                        text       = "${spot.category.emoji}  ${spot.category.label}",
+                        text       = "${spot.category}",
                         color      = Color.White,
                         fontSize   = 12.sp,
                         fontWeight = FontWeight.SemiBold,
@@ -145,11 +120,9 @@ fun SpotCard(
                     )
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(spot.authorLabel,              color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp)
-                    Text("·",                           color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp)
-                    Text(spot.timeAgo,                  color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp)
-                    Text("·",                           color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp)
-                    Text("${spot.followerCount} seguono", color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp)
+                    val elapsed = spot.timestamp?.let { (Clock.System.now() - it)}
+                    Text(elapsed.toString(),                  color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp)
+
                 }
             }
 
@@ -158,22 +131,26 @@ fun SpotCard(
                 verticalArrangement = Arrangement.Center
             ) {
 
-                Text(
-                    text       = spot.title,
-                    color      = Color.White,
-                    fontSize   = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                    lineHeight = 28.sp,
-                )
+                spot.title?.let {
+                    Text(
+                        text       = it,
+                        color      = Color.White,
+                        fontSize   = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        lineHeight = 28.sp,
+                    )
+                }
 
                 Spacer(Modifier.height(4.dp))
 
-                Text(
-                    text       = spot.description,
-                    color      = Color.White.copy(alpha = 0.88f),
-                    fontSize   = 14.sp,
-                    lineHeight = 20.sp,
-                )
+                spot.description?.let {
+                    Text(
+                        text       = it,
+                        color      = Color.White.copy(alpha = 0.88f),
+                        fontSize   = 14.sp,
+                        lineHeight = 20.sp,
+                    )
+                }
             }
 
         }
