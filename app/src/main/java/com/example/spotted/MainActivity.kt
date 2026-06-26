@@ -51,12 +51,8 @@ import org.koin.core.context.GlobalContext.startKoin
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
-        startKoin {
-            androidContext(this@MainActivity)
-            modules(appModule)
-        }
-        super.onCreate(savedInstanceState)
 
+        super.onCreate(savedInstanceState)
         ThemeManager.init(applicationContext)
 
         enableEdgeToEdge()
