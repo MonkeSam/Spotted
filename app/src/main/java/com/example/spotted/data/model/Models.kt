@@ -16,6 +16,13 @@ data class User(
     @SerialName("profile_picture") val profilePicture: String? = null
 )
 
+@Serializable
+data class Category(
+    val id: Int,
+    val name: String,
+    val emoji: String
+)
+
 @OptIn(ExperimentalTime::class)
 @Serializable
 data class Post(

@@ -1,420 +1,511 @@
-//package com.example.spotted.pages
-//
-//import android.graphics.drawable.Icon
-//import androidx.compose.foundation.BorderStroke
-//import androidx.compose.foundation.Image
-//import androidx.compose.foundation.background
-//import androidx.compose.foundation.border
-//import androidx.compose.foundation.clickable
-//import androidx.compose.foundation.horizontalScroll
-//import androidx.compose.foundation.layout.*
-//import androidx.compose.foundation.rememberScrollState
-//import androidx.compose.foundation.shape.CircleShape
-//import androidx.compose.foundation.shape.RoundedCornerShape
-//import androidx.compose.foundation.text.BasicTextField
-//import androidx.compose.foundation.verticalScroll
-//import androidx.compose.material.icons.Icons
-//import androidx.compose.material.icons.filled.AddCircle
-//import androidx.compose.material.icons.filled.Close
-//import androidx.compose.material.icons.filled.LocationOn
-//import androidx.compose.material.icons.filled.Share
-//import androidx.compose.material.icons.outlined.Info
-//import androidx.compose.material3.*
-//import androidx.compose.runtime.*
-//import androidx.compose.ui.Alignment
-//import androidx.compose.ui.Modifier
-//import androidx.compose.ui.draw.clip
-//import androidx.compose.ui.graphics.Color
-//import androidx.compose.ui.graphics.SolidColor
-//import androidx.compose.ui.text.font.FontWeight
-//import androidx.compose.ui.text.style.TextAlign
-//import androidx.compose.ui.unit.dp
-//import androidx.compose.ui.unit.sp
-//import com.google.android.engage.common.datamodel.Image
-//
-//private const val MAX_CHARS = 280
-//
-//@Composable
-//fun ShareScreen(innerPadding: PaddingValues) {
-//
-//    // ── Stato UI (logica da implementare) ─────────────────────────────────
-////    var selectedCategory by remember { mutableStateOf<SpotCategory?>(null) }
-//    var textContent      by remember { mutableStateOf("") }
-//    var locationText     by remember { mutableStateOf("") }
-//    var photoSelected    by remember { mutableStateOf(false) }
-//
-////    val canPublish = selectedCategory != null && textContent.isNotBlank()
-//
-//    Box(
-//        modifier = Modifier
-//            .fillMaxSize()
-//            .padding(innerPadding),
-//    ) {
-//        // ── Contenuto scrollabile ─────────────────────────────────────────
-//        Column(
-//            modifier = Modifier
-//                .fillMaxSize()
-//                .verticalScroll(rememberScrollState())
-//                .padding(horizontal = 16.dp)
-//                .padding(bottom = 88.dp),   // spazio per il bottone fisso
-//            verticalArrangement = Arrangement.spacedBy(16.dp),
-//        ) {
-//
-//            Spacer(Modifier.height(4.dp))
-//
-//            // ── Banner anonimato ─────────────────────────────────────────
-//            AnonymousBanner()
-//
-//            // ── Selettore categoria ──────────────────────────────────────
-//            SectionLabel("Categoria")
-//            CategorySelector(
-//                selected   = selectedCategory,
-//                onSelect   = { selectedCategory = it },
-//            )
-//
-//            // ── Campo testo ──────────────────────────────────────────────
-//            SectionLabel("Cosa hai spottato?")
-//            SpotTextField(
-//                value      = textContent,
-//                onValueChange = { if (it.length <= MAX_CHARS) textContent = it },
-//            )
-//
-//            // ── Foto ─────────────────────────────────────────────────────
-//            SectionLabel("Foto  •  opzionale")
-//            PhotoPickerCard(
-//                photoSelected = photoSelected,
-//                onPickPhoto   = { /* TODO: aprire il picker */ photoSelected = true },
-//                onRemovePhoto = { photoSelected = false },
-//            )
-//
-//            // ── Posizione ────────────────────────────────────────────────
-//            SectionLabel("Posizione  •  opzionale")
-//            LocationPickerRow(
-//                value         = locationText,
-//                onValueChange = { locationText = it },
-//                onPickLocation = { /* TODO: aprire la mappa */ },
-//            )
-//        }
-//
-//        // ── Bottone pubblica (fisso in basso) ─────────────────────────────
-//        Button(
-//            onClick  = { /* TODO: pubblicare lo spot */ },
-//            enabled  = canPublish,
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .align(Alignment.BottomCenter)
-//                .padding(horizontal = 16.dp, vertical = 16.dp)
-//                .height(52.dp),
-//            shape  = RoundedCornerShape(14.dp),
-//            colors = ButtonDefaults.buttonColors(
-//                containerColor         = MaterialTheme.colorScheme.primary,
-//                contentColor           = Color.White,
-//                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-//                disabledContentColor   = MaterialTheme.colorScheme.onSurfaceVariant,
-//            ),
-//        ) {
-//            Text(
-//                text       = "Pubblica spot",
-//                fontSize   = 15.sp,
-//                fontWeight = FontWeight.SemiBold,
-//            )
-//        }
-//    }
-//}
-//
-//// ─── AnonymousBanner ─────────────────────────────────────────────────────────
-//
-//@Composable
-//fun AnonymousBanner() {
-//    Surface(
-//        shape = RoundedCornerShape(12.dp),
-//        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f),
-//    ) {
-//        Row(
-//            modifier          = Modifier
-//                .fillMaxWidth()
-//                .padding(horizontal = 14.dp, vertical = 10.dp),
-//            verticalAlignment = Alignment.CenterVertically,
-//            horizontalArrangement = Arrangement.spacedBy(10.dp),
-//        ) {
-//            Icon(
-//                imageVector        = Icons.Outlined.Info,
-//                contentDescription = null,
-//                tint               = MaterialTheme.colorScheme.primary,
-//                modifier           = Modifier.size(18.dp),
-//            )
-//            Text(
-//                text     = "Stai pubblicando in modo anonimo. Il tuo nome non sarà visibile sullo spot.",
-//                fontSize = 12.sp,
-//                color    = MaterialTheme.colorScheme.onSurface,
-//                lineHeight = 17.sp,
-//            )
-//        }
-//    }
-//}
-//
-//// ─── SectionLabel ────────────────────────────────────────────────────────────
-//
-//@Composable
-//fun SectionLabel(text: String) {
-//    Text(
-//        text       = text,
-//        fontSize   = 12.sp,
-//        fontWeight = FontWeight.SemiBold,
-//        letterSpacing = 0.3.sp,
-//        color      = MaterialTheme.colorScheme.onSurfaceVariant,
-//        modifier   = Modifier.padding(start = 2.dp),
-//    )
-//}
-//
-//// ─── CategorySelector ────────────────────────────────────────────────────────
-//
-//@Composable
-//fun CategorySelector(
-//    selected: SpotCategory?,
-//    onSelect: (SpotCategory) -> Unit,
-//) {
-//    Row(
-//        modifier              = Modifier
-//            .fillMaxWidth()
-//            .horizontalScroll(rememberScrollState()),
-//        horizontalArrangement = Arrangement.spacedBy(8.dp),
-//    ) {
-//        SpotCategory.entries.forEach { category ->
-//            val isSelected = category == selected
-//            Surface(
-//                modifier = Modifier.clickable { onSelect(category) },
-//                shape    = RoundedCornerShape(12.dp),
-//                color = if (isSelected) MaterialTheme.colorScheme.primaryContainer
-//                else MaterialTheme.colorScheme.surfaceContainerHigh
-//            ) {
-//                Row(
-//                    modifier          = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-//                    verticalAlignment = Alignment.CenterVertically,
-//                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-//                ) {
-//                    Text(category.emoji, fontSize = 16.sp)
-//                    Text(
-//                        text       = category.label,
-//                        fontSize   = 13.sp,
-//                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-//                        color      = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer
-//                        else MaterialTheme.colorScheme.onSurfaceVariant,
-//                    )
-//                }
-//            }
-//        }
-//    }
-//}
-//
-//// ─── SpotTextField ───────────────────────────────────────────────────────────
-//
-//@Composable
-//fun SpotTextField(
-//    value:         String,
-//    onValueChange: (String) -> Unit,
-//) {
-//    val remaining = MAX_CHARS - value.length
-//
-//    Surface(
-//        shape = RoundedCornerShape(16.dp),
-//        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-//        border = BorderStroke(
-//            0.5.dp,
-//            MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-//        ),
-//    ) {
-//        Column {
-//            BasicTextField(
-//                value         = value,
-//                onValueChange = onValueChange,
-//                modifier      = Modifier
-//                    .fillMaxWidth()
-//                    .defaultMinSize(minHeight = 120.dp)
-//                    .padding(horizontal = 16.dp, vertical = 14.dp),
-//                textStyle     = LocalTextStyle.current.copy(
-//                    fontSize = 15.sp,
-//                    color    = MaterialTheme.colorScheme.onSurface,
-//                    lineHeight = 22.sp,
-//                ),
-//                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-//                decorationBox = { innerField ->
-//                    Box {
-//                        if (value.isEmpty()) {
-//                            Text(
-//                                text     = "Es. Ho visto qualcuno dimenticare un libro in Aula",
-//                                fontSize = 15.sp,
-//                                color    = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-//                                lineHeight = 22.sp,
-//                            )
-//                        }
-//                        innerField()
-//                    }
-//                },
-//            )
-//
-//            // Counter
-//            Row(
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .padding(end = 14.dp, bottom = 10.dp),
-//                horizontalArrangement = Arrangement.End,
-//            ) {
-//                Text(
-//                    text  = "$remaining",
-//                    fontSize = 11.sp,
-//                    color = when {
-//                        remaining < 20  -> MaterialTheme.colorScheme.error
-//                        remaining < 60  -> Color(0xFFB45309)
-//                        else            -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-//                    },
-//                )
-//            }
-//        }
-//    }
-//}
-//
-//// ─── PhotoPickerCard ─────────────────────────────────────────────────────────
-//
-//@Composable
-//fun PhotoPickerCard(
-//    photoSelected: Boolean,
-//    onPickPhoto:   () -> Unit,
-//    onRemovePhoto: () -> Unit,
-//) {
-//    if (photoSelected) {
-//        // Stato: foto selezionata
-//        Surface(
-//            shape = RoundedCornerShape(16.dp),
-//            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f),
-//            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)),
-//        ) {
-//            Row(
-//                modifier          = Modifier
-//                    .fillMaxWidth()
-//                    .padding(horizontal = 16.dp, vertical = 14.dp),
-//                verticalAlignment = Alignment.CenterVertically,
-//                horizontalArrangement = Arrangement.SpaceBetween,
-//            ) {
-//                Row(
-//                    verticalAlignment = Alignment.CenterVertically,
-//                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-//                ) {
-//                    Icon(
-//                        Icons.Default.Share,
-//                        contentDescription = null,
-//                        tint     = MaterialTheme.colorScheme.primary,
-//                        modifier = Modifier.size(22.dp),
-//                    )
-//                    Text(
-//                        text     = "1 foto selezionata",
-//                        fontSize = 14.sp,
-//                        fontWeight = FontWeight.Medium,
-//                        color    = MaterialTheme.colorScheme.onSurface,
-//                    )
-//                }
-//                IconButton(onClick = onRemovePhoto, modifier = Modifier.size(28.dp)) {
-//                    Icon(
-//                        Icons.Default.Close,
-//                        contentDescription = "Rimuovi foto",
-//                        tint     = MaterialTheme.colorScheme.onSurfaceVariant,
-//                        modifier = Modifier.size(18.dp),
-//                    )
-//                }
-//            }
-//        }
-//    } else {
-//        // Stato: nessuna foto
-//        Box(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .height(110.dp)
-//                .clip(RoundedCornerShape(16.dp))
-//                .border(
-//                    width  = 1.5.dp,
-//                    brush  = SolidColor(MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)),
-//                    shape  = RoundedCornerShape(16.dp),
-//                )
-//                .clickable(onClick = onPickPhoto),
-//            contentAlignment = Alignment.Center,
-//        ) {
-//            Column(
-//                horizontalAlignment = Alignment.CenterHorizontally,
-//                verticalArrangement = Arrangement.spacedBy(6.dp),
-//            ) {
-//                Icon(
-//                    Icons.Default.AddCircle,
-//                    contentDescription = "Aggiungi foto",
-//                    tint     = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-//                    modifier = Modifier.size(28.dp),
-//                )
-//                Text(
-//                    text     = "Tocca per aggiungere una foto",
-//                    fontSize = 13.sp,
-//                    color    = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-//                )
-//            }
-//        }
-//    }
-//}
-//
-//// ─── LocationPickerRow ────────────────────────────────────────────────────────
-//
-//@Composable
-//fun LocationPickerRow(
-//    value:           String,
-//    onValueChange:   (String) -> Unit,
-//    onPickLocation:  () -> Unit,
-//) {
-//    Surface(
-//        shape  = RoundedCornerShape(16.dp),
-//        color  = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-//        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)),
-//    ) {
-//        Row(
-//            modifier          = Modifier
-//                .fillMaxWidth()
-//                .padding(horizontal = 16.dp, vertical = 4.dp),
-//            verticalAlignment = Alignment.CenterVertically,
-//            horizontalArrangement = Arrangement.spacedBy(10.dp),
-//        ) {
-//            IconButton(
-//                onClick  = onPickLocation,
-//                modifier = Modifier.size(36.dp),
-//            ) {
-//                Icon(
-//                    Icons.Default.LocationOn,
-//                    contentDescription = "Scegli posizione sulla mappa",
-//                    tint     = MaterialTheme.colorScheme.primary,
-//                    modifier = Modifier.size(22.dp),
-//                )
-//            }
-//
-//            BasicTextField(
-//                value         = value,
-//                onValueChange = onValueChange,
-//                modifier      = Modifier
-//                    .weight(1f)
-//                    .padding(vertical = 14.dp),
-//                textStyle     = LocalTextStyle.current.copy(
-//                    fontSize = 14.sp,
-//                    color    = MaterialTheme.colorScheme.onSurface,
-//                ),
-//                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-//                singleLine    = true,
-//                decorationBox = { innerField ->
-//                    Box {
-//                        if (value.isEmpty()) {
-//                            Text(
-//                                text  = "Es. Piazza Verdi, Aula A, Biblioteca…",
-//                                fontSize = 14.sp,
-//                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-//                            )
-//                        }
-//                        innerField()
-//                    }
-//                },
-//            )
-//        }
-//    }
-//}
+// Share.kt
+package com.example.spotted.pages
+
+import OSMPlace
+import android.content.Context
+import android.location.Geocoder
+import android.net.Uri
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.spotted.data.model.Category
+import com.example.spotted.data.view.ShareViewModel
+import com.example.spotted.utils.PhotoPickerSection
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
+import org.koin.androidx.compose.koinViewModel
+import searchAddressOSM
+import java.util.Locale
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ShareScreen(
+    innerPadding: PaddingValues
+) {
+    val viewModel: ShareViewModel = koinViewModel()
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+
+    // ── Stati del form ────────────────────────────────────────────────────
+    var title by remember { mutableStateOf("") }
+    var selectedCategory by remember { mutableStateOf<Category?>(null) }
+    var description by remember { mutableStateOf("") }
+
+    // URI della foto selezionata dall'utente (fotocamera o galleria)
+    var selectedPhotoUri by remember { mutableStateOf<Uri?>(null) }
+
+    // ── Stato dropdown categoria ───────────────────────────────────────────
+    var categoryDropdownExpanded by remember { mutableStateOf(false) }
+
+    // ── Stati per la geolocalizzazione ────────────────────────────────────
+    var address by remember { mutableStateOf("") }
+    var coordinates by remember { mutableStateOf<Pair<Double, Double>?>(null) }
+    var isSearchingLocation by remember { mutableStateOf(false) }
+    var locationError by remember { mutableStateOf(false) }
+
+    // ── Osserviamo gli stati del ViewModel ────────────────────────────────
+    val isLoading  by viewModel.isLoading.collectAsState()
+    val error      by viewModel.error.collectAsState()
+    val isSuccess  by viewModel.isSuccess.collectAsState()
+    val categories by viewModel.categories.collectAsState()
+
+    // Variabili per salvare la posizione scelta da OpenStreetMap
+    var latitude by remember { mutableStateOf<Double?>(null) }
+    var longitude by remember { mutableStateOf<Double?>(null) }
+    var selectedAddressName by remember { mutableStateOf("") }
+
+    // ── Effetto di reset e navigazione al successo ────────────────────────
+    LaunchedEffect(isSuccess) {
+        if (isSuccess) {
+            title            = ""
+            selectedCategory = null
+            description      = ""
+            address          = ""
+            coordinates      = null
+            selectedPhotoUri = null
+        }
+    }
+
+    // ── Funzione helper per il geocoding asincrono ────────────────────────
+    suspend fun findCoordinates(indirizzo: String) {
+        isSearchingLocation = true
+        locationError = false
+        val result = getCoordinatesFromAddress(context, indirizzo)
+        if (result != null) {
+            coordinates = result
+        } else {
+            locationError = true
+            coordinates = null
+        }
+        isSearchingLocation = false
+    }
+
+    // BOX RADICE
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(innerPadding)
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        // Colonna scorrevole per il contenuto del form
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            // ── Titolo ───────────────────────────────────────────────────────
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 28.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    buildAnnotatedString {
+                        withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.secondary)) {
+                            append("Nuovo")
+                        }
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)) {
+                            append("Spot")
+                        }
+                    },
+                    fontSize = 36.sp
+                )
+                Spacer(Modifier.height(8.dp))
+                Surface(
+                    shape = RoundedCornerShape(50),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                ) {
+                    Text(
+                        text = "Condividi col campus",
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+
+            // ── Form Principale ──────────────────────────────────────────────
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+
+                // ── Dettagli Spot ────────────────────────────────────────────
+                Column {
+                    SectionLabel("DETTAGLI SPOT")
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            // Titolo
+                            OutlinedTextField(
+                                value = title,
+                                onValueChange = { title = it },
+                                label = { Text("Titolo") },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+                                enabled = !isLoading
+                            )
+
+                            // ── Dropdown Categoria ───────────────────────────
+                            ExposedDropdownMenuBox(
+                                expanded = categoryDropdownExpanded && !isLoading,
+                                onExpandedChange = {
+                                    if (!isLoading) categoryDropdownExpanded = !categoryDropdownExpanded
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                OutlinedTextField(
+                                    value = selectedCategory?.let { "${it.emoji}  ${it.name}" }
+                                        ?: if (categories.isEmpty()) "Caricamento…" else "Seleziona categoria",
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    label = { Text("Categoria") },
+                                    trailingIcon = {
+                                        ExposedDropdownMenuDefaults.TrailingIcon(
+                                            expanded = categoryDropdownExpanded
+                                        )
+                                    },
+                                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                                    modifier = Modifier
+                                        .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                                        .fillMaxWidth(),
+                                    enabled = !isLoading && categories.isNotEmpty(),
+                                    singleLine = true,
+                                )
+
+                                ExposedDropdownMenu(
+                                    expanded = categoryDropdownExpanded && !isLoading,
+                                    onDismissRequest = { categoryDropdownExpanded = false },
+                                ) {
+                                    if (categories.isEmpty()) {
+                                        DropdownMenuItem(
+                                            text = {
+                                                Text(
+                                                    "Nessuna categoria disponibile",
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            },
+                                            onClick = { categoryDropdownExpanded = false }
+                                        )
+                                    } else {
+                                        categories.forEach { category ->
+                                            DropdownMenuItem(
+                                                text = {
+                                                    Row(
+                                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                                        verticalAlignment = Alignment.CenterVertically
+                                                    ) {
+                                                        Text(
+                                                            text     = category.emoji,
+                                                            fontSize = 20.sp
+                                                        )
+                                                        Text(
+                                                            text  = category.name,
+                                                            style = MaterialTheme.typography.bodyMedium
+                                                        )
+                                                    }
+                                                },
+                                                onClick = {
+                                                    selectedCategory = category
+                                                    categoryDropdownExpanded = false
+                                                },
+                                                contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Descrizione
+                            OutlinedTextField(
+                                value = description,
+                                onValueChange = { description = it },
+                                label = { Text("Descrizione") },
+                                modifier = Modifier.fillMaxWidth(),
+                                minLines = 3,
+                                maxLines = 5,
+                                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+                                enabled = !isLoading
+                            )
+                        }
+                    }
+                }
+
+                // ── Posizione con Autocomplete OSM ───────────────────────────
+                OSMAddressAutocompleteField(
+                    modifier = Modifier.fillMaxWidth(),
+                    onLocationSelected = { lat, lon, addr ->
+                        latitude = lat
+                        longitude = lon
+                        selectedAddressName = addr
+                    }
+                )
+
+                // Feedback visivo posizione agganciata
+                if (latitude != null && longitude != null) {
+                    Text(
+                        text = "📍 Posizione agganciata correttamente!",
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+
+                // ── Media (Opzionale) ────────────────────────────────────────
+                Column {
+                    SectionLabel("MEDIA (OPZIONALE)")
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                    ) {
+                        Box(modifier = Modifier.padding(16.dp)) {
+                            PhotoPickerSection(
+                                selectedUri     = selectedPhotoUri,
+                                onPhotoSelected = { uri -> selectedPhotoUri = uri },
+                                onPhotoRemoved  = { selectedPhotoUri = null },
+                                enabled         = !isLoading
+                            )
+                        }
+                    }
+                }
+
+                // ── Errori Supabase ──────────────────────────────────────────
+                if (error != null) {
+                    Text(
+                        text = error ?: "Errore sconosciuto",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
+                }
+            }
+
+            // Spazio protettivo finale aumentato leggermente per compensare l'intera barra
+            Spacer(modifier = Modifier.height(90.dp))
+        }
+
+        // ── 🎯 BARRA INFERIORE COPRENTE (NON TRASPARENTE) ──────────────────────
+        Surface(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth(),
+            color = MaterialTheme.colorScheme.background // Colore solido uguale allo sfondo dello schermo
+        ) {
+            Button(
+                onClick = {
+                    val categoryId = selectedCategory?.id ?: return@Button
+                    val lat = latitude ?: 0.0
+                    val lng = longitude ?: 0.0
+
+                    val photoBytes = selectedPhotoUri?.let { uri ->
+                        context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                    }
+                    val photoMime = selectedPhotoUri
+                        ?.let { context.contentResolver.getType(it) }
+                        ?: "image/jpeg"
+
+                    viewModel.publishSpot(
+                        title       = title,
+                        category    = categoryId,
+                        description = description,
+                        latitude    = lat,
+                        longitude   = lng,
+                        photoBytes  = photoBytes,
+                        photoMime   = photoMime
+                    )
+                },
+                modifier = Modifier
+                    .padding(horizontal = 16.dp, vertical = 16.dp) // Il padding interno spinge i bordi della barra opaca
+                    .fillMaxWidth()
+                    .height(52.dp),
+                enabled = !isLoading
+                        && title.isNotBlank()
+                        && description.isNotBlank()
+                        && selectedCategory != null
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier    = Modifier.size(24.dp),
+                        color       = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text("Pubblica Spot", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                }
+            }
+        }
+    }
+}
+
+
+// ── Componenti privati ────────────────────────────────────────────────────────
+
+@Composable
+private fun SectionLabel(text: String) {
+    Text(
+        text = text,
+        modifier = Modifier.padding(start = 16.dp, bottom = 8.dp),
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        letterSpacing = 1.sp
+    )
+}
+
+/**
+ * Funzione helper per convertire un indirizzo in coordinate (Lat, Lon)
+ * utilizzando il Geocoder nativo di Android.
+ */
+@Suppress("DEPRECATION")
+suspend fun getCoordinatesFromAddress(context: Context, addressName: String): Pair<Double, Double>? {
+    return withContext(Dispatchers.IO) {
+        try {
+            val geocoder = Geocoder(context, Locale.getDefault())
+            val addresses = geocoder.getFromLocationName(addressName, 1)
+            if (!addresses.isNullOrEmpty()) {
+                val location = addresses[0]
+                Pair(location.latitude, location.longitude)
+            } else null
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun OSMAddressAutocompleteField(
+    modifier: Modifier = Modifier,
+    onLocationSelected: (lat: Double, lon: Double, address: String) -> Unit
+) {
+    var searchQuery by remember { mutableStateOf("") }
+    var suggestions by remember { mutableStateOf<List<OSMPlace>>(emptyList()) }
+    var isDropdownExpanded by remember { mutableStateOf(false) }
+    var isSearching by remember { mutableStateOf(false) }
+
+    // Effetto Debounce
+    LaunchedEffect(searchQuery) {
+        if (searchQuery.length >= 3) {
+            isSearching = true
+            delay(500)
+            suggestions = searchAddressOSM(searchQuery)
+            isSearching = false
+            isDropdownExpanded = suggestions.isNotEmpty()
+        } else {
+            suggestions = emptyList()
+            isDropdownExpanded = false
+        }
+    }
+
+    Box(modifier = modifier) {
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            label = { Text("Cerca Posizione / Indirizzo") },
+            placeholder = { Text("Es: Piazza Verdi, Bologna") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+            trailingIcon = {
+                if (isSearching) {
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                }
+            }
+        )
+
+        DropdownMenu(
+            expanded = isDropdownExpanded,
+            onDismissRequest = { isDropdownExpanded = false },
+            modifier = Modifier.fillMaxWidth(0.9f)
+        ) {
+            suggestions.forEach { place ->
+                DropdownMenuItem(
+                    text = {
+                        val parts = place.displayName.split(", ")
+                        val primary = parts.take(2).joinToString(", ")
+                        val secondary = parts.drop(2).joinToString(", ")
+
+                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(
+                                text = primary,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                                maxLines = 1
+                            )
+                            if (secondary.isNotBlank()) {
+                                Text(
+                                    text = secondary,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1
+                                )
+                            }
+                        }
+                    },
+                    onClick = {
+                        searchQuery = place.displayName
+                        isDropdownExpanded = false
+                        val latDouble = place.lat.toDoubleOrNull() ?: 0.0
+                        val lonDouble = place.lon.toDoubleOrNull() ?: 0.0
+                        onLocationSelected(latDouble, lonDouble, place.displayName)
+                    }
+                )
+            }
+        }
+    }
+}

@@ -81,6 +81,8 @@ dependencies {
     implementation("io.github.jan-tennert.supabase:auth-kt")
     implementation("io.ktor:ktor-client-android:3.0.0")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
+    implementation("io.coil-kt:coil-compose:2.6.0")
+    implementation("io.insert-koin:koin-androidx-compose:4.0.2")
 
 
     testImplementation(libs.junit)

@@ -13,6 +13,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton // ✅ Import aggiunto
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -31,21 +32,27 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.spotted.data.view.LoginViewModel
+import org.koin.androidx.compose.koinViewModel
+
 @Composable
-fun LoginScreen(innerPadding: PaddingValues, navigate: () -> Unit) {
+fun LoginScreen(
+    innerPadding: PaddingValues,
+    navigate: () -> Unit,
+    navigateToSignup: () -> Unit // ✅ 1. Nuovo parametro per la navigazione
+) {
     var email by remember { mutableStateOf(String()) }
     var password by remember { mutableStateOf(String()) }
-    val viewModel: LoginViewModel = viewModel()
+    val viewModel: LoginViewModel = koinViewModel()
 
     val isLoading by viewModel.isLoading.collectAsState()
 
-    // ✅ 1. Osserva l'utente e naviga quando il login ha successo
+    // Osserva l'utente e naviga quando il login ha successo
     val user by viewModel.user.collectAsState()
     LaunchedEffect(user) {
         if (user != null) navigate()
     }
 
-    // ✅ 2. Osserva l'errore per mostrarlo all'utente
+    // Osserva l'errore per mostrarlo all'utente
     val error by viewModel.error.collectAsState()
 
     Box(
@@ -97,7 +104,7 @@ fun LoginScreen(innerPadding: PaddingValues, navigate: () -> Unit) {
                     modifier = Modifier.fillMaxWidth(),
                 )
 
-                // ✅ 3. Mostra il messaggio di errore se presente
+                // Mostra il messaggio di errore se presente
                 if (error != null) {
                     Text(
                         text = error!!,
@@ -108,13 +115,24 @@ fun LoginScreen(innerPadding: PaddingValues, navigate: () -> Unit) {
                 }
 
                 Button(
-                    onClick = { viewModel.login(email, password) }, // ✅ rimosso il Log inutile
+                    onClick = { viewModel.login(email, password) },
                     enabled = !isLoading,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 8.dp),
                 ) {
                     Text(if (isLoading) "Caricamento..." else "Accedi")
+                }
+
+                // ✅ 2. Aggiunto TextButton per andare alla schermata di Registrazione
+                TextButton(
+                    onClick = navigateToSignup,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Non hai un account? Registrati",
+                        color = MaterialTheme.colorScheme.secondary
+                    )
                 }
             }
         }

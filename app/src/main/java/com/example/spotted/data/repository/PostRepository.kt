@@ -7,7 +7,7 @@ import com.example.spotted.utils.toResource
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.result.PostgrestResult
 
-object PostRepository {
+class PostRepository {
 
     private val db get() = SupabaseModule.client.from("Posts")
 

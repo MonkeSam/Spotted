@@ -8,7 +8,7 @@ import com.example.spotted.utils.toResource
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.result.PostgrestResult
 
-object FollowRepository {
+class FollowRepository{
 
     private val db get() = SupabaseModule.client.from("Follows")
 
@@ -48,4 +48,9 @@ object FollowRepository {
             }
         }.decodeList<Follow>().isNotEmpty()
     }.toResource()
+    suspend fun getFollowerCount(postId: Long): Int = runCatching {
+        db.select { filter { eq("post_id", postId) } }
+            .decodeList<Follow>()
+            .size
+    }.getOrDefault(0)
 }

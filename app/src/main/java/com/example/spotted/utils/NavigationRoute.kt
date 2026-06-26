@@ -10,7 +10,9 @@ sealed interface NavigationRoute{
 
     @Serializable data object Login : NavigationRoute
 
-    @Serializable data class Chat(val chatId: Int) : NavigationRoute
+    @Serializable data class Chat(val chatId: Long) : NavigationRoute
 
     @Serializable data object Share: NavigationRoute
+
+    @Serializable data object Signup: NavigationRoute
 }

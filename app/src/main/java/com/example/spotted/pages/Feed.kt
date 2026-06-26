@@ -25,24 +25,35 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
+import com.example.spotted.data.model.Category
 import com.example.spotted.data.model.Post
 import com.example.spotted.data.view.FeedViewModel
 import com.example.spotted.ui.components.SwipeCardStack
 import com.example.spotted.ui.components.rememberSwipeCardController
+import org.koin.androidx.compose.koinViewModel
 import kotlin.time.Clock
+import kotlin.time.DurationUnit
 import kotlin.time.ExperimentalTime
 
 
@@ -50,19 +61,28 @@ import kotlin.time.ExperimentalTime
 fun FeedScreen(
     innerPadding: PaddingValues
 ) {
-    val viewModel : FeedViewModel = viewModel()
-    val spots by viewModel.posts.collectAsState()
+    val viewModel: FeedViewModel = koinViewModel()
+    val spots      by viewModel.posts.collectAsState()
+    val categories by viewModel.categories.collectAsState()
     val controller = rememberSwipeCardController()
 
-    // Box occupa tutto lo spazio assegnato dal NavHost (già fillMaxSize dal
-    // Scaffold della MainActivity), con le card che vanno dietro le barre glass.
-    Box(modifier = Modifier
-        .fillMaxSize()
-        .padding(innerPadding)
-        .padding(10.dp)
-        .padding(bottom = 10.dp)
-    ){
+    // Ricarica ogni volta che la schermata torna visibile
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) viewModel.loadFeed()
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(innerPadding)
+            .padding(10.dp)
+            .padding(bottom = 10.dp)
+    ) {
         SwipeCardStack(
             items         = spots,
             onSwipedRight = { viewModel.swipeRight(it.id) },
@@ -71,10 +91,13 @@ fun FeedScreen(
             modifier      = Modifier.fillMaxSize(),
             emptyContent  = { EmptyFeedState() },
         ) { spot, swipeProgress ->
-            SpotCard(spot = spot, swipeProgress = swipeProgress)
-
+            SpotCard(
+                spot          = spot,
+                swipeProgress = swipeProgress,
+                category      = categories[spot.category],
+                timeAgo = viewModel.timeAgo(spot),
+            )
         }
-
     }
 }
 
@@ -84,53 +107,99 @@ fun FeedScreen(
 @Composable
 fun SpotCard(
     spot:          Post,
+    timeAgo : String,
     swipeProgress: Float,
     modifier:      Modifier = Modifier,
+    category:      Category? = null,
 ) {
+    val categoryColor = when (spot.category % 3) {
+        0    -> MaterialTheme.colorScheme.primary
+        1    -> MaterialTheme.colorScheme.secondary
+        2    -> MaterialTheme.colorScheme.tertiary
+        else -> MaterialTheme.colorScheme.surfaceTint
+    }
+
     Box(
         modifier = modifier
             .fillMaxSize()
             .clip(RoundedCornerShape(24.dp))
-            .background(
-                when(spot.category % 3){
-                    0 -> MaterialTheme.colorScheme.primary
-                    1 -> MaterialTheme.colorScheme.secondary
-                    2 -> MaterialTheme.colorScheme.tertiary
-                    else -> MaterialTheme.colorScheme.surfaceTint
-                }
-            ),
     ) {
+
+        // ── Sfondo: foto o colore categoria ─────────────────────────────────
+        if (spot.photo != null) {
+            AsyncImage(
+                model              = spot.photo,
+                contentDescription = "Foto dello spot",
+                modifier           = Modifier.fillMaxSize(),
+                contentScale       = ContentScale.Crop,
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            0.0f to Color.Black.copy(alpha = 0.30f),
+                            0.4f to Color.Transparent,
+                            1.0f to Color.Black.copy(alpha = 0.72f),
+                        )
+                    )
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(categoryColor)
+            )
+        }
+
+        // ── Contenuto testuale ───────────────────────────────────────────────
         Column(
             modifier = Modifier
-                .padding(20.dp).fillMaxSize()
+                .padding(20.dp)
+                .fillMaxSize()
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(15.dp),
-            ) {
+            // Badge categoria (emoji + nome) + timestamp
+            Row(horizontalArrangement = Arrangement.spacedBy(15.dp)) {
                 Surface(
                     color = Color.White.copy(alpha = 0.22f),
                     shape = RoundedCornerShape(8.dp),
                 ) {
                     Text(
-                        text       = "${spot.category}",
+                        // Mostra "🎭 Musica" se la categoria è disponibile, altrimenti l'id
+                        text = if (category != null) {
+                            "${category.emoji} ${category.name}"
+                        } else {
+                            "${spot.category}"
+                        },
                         color      = Color.White,
                         fontSize   = 12.sp,
                         fontWeight = FontWeight.SemiBold,
                         modifier   = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                     )
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    val elapsed = spot.timestamp?.let { (Clock.System.now() - it)}
-                    Text(elapsed.toString(),                  color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp)
 
-                }
+                    Text(
+                        text = timeAgo,
+                        color    = Color.White.copy(alpha = 0.7f),
+                        fontSize = 12.sp,
+                    )
             }
 
+            // Titolo e descrizione — in basso se c'è la foto, centrati altrimenti
             Column(
-                modifier.fillMaxSize().align(Alignment.CenterHorizontally),
-                verticalArrangement = Arrangement.Center
+                modifier = if (spot.photo != null) {
+                    Modifier
+                        .fillMaxSize()
+                        .align(Alignment.CenterHorizontally)
+                        .padding(top = 8.dp)
+                        .then(Modifier.padding(top = 200.dp))
+                } else {
+                    Modifier
+                        .fillMaxSize()
+                        .align(Alignment.CenterHorizontally)
+                },
+                verticalArrangement = if (spot.photo != null) Arrangement.Bottom else Arrangement.Center,
             ) {
-
                 spot.title?.let {
                     Text(
                         text       = it,
@@ -140,9 +209,7 @@ fun SpotCard(
                         lineHeight = 28.sp,
                     )
                 }
-
                 Spacer(Modifier.height(4.dp))
-
                 spot.description?.let {
                     Text(
                         text       = it,
@@ -151,28 +218,28 @@ fun SpotCard(
                         lineHeight = 20.sp,
                     )
                 }
+                if (spot.photo != null) Spacer(Modifier.height(52.dp))
             }
-
         }
 
+        // ── Timbri swipe ─────────────────────────────────────────────────────
         SwipeStamp(
-            icon = Icons.Filled.Close,
-            description     = "Follow",
-            color    = MaterialTheme.colorScheme.inverseOnSurface,
-            alpha    = swipeProgress.coerceAtLeast(0f),
-            rotation = -8f,
-            modifier = Modifier
+            icon        = Icons.Filled.Favorite,
+            description = "Follow",
+            color       = MaterialTheme.colorScheme.tertiary,
+            alpha       = swipeProgress.coerceAtLeast(0f),
+            rotation    = -8f,
+            modifier    = Modifier
                 .align(Alignment.BottomStart)
                 .padding(start = 20.dp, bottom = 24.dp),
         )
-
         SwipeStamp(
-            icon = Icons.Filled.Favorite,
-            description     = "Dismiss",
-            color    = MaterialTheme.colorScheme.tertiary,
-            alpha    = (-swipeProgress).coerceAtLeast(0f),
-            rotation = 8f,
-            modifier = Modifier
+            icon        = Icons.Filled.Close,
+            description = "Dismiss",
+            color       = MaterialTheme.colorScheme.inverseOnSurface,
+            alpha       = (-swipeProgress).coerceAtLeast(0f),
+            rotation    = 8f,
+            modifier    = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(bottom = 24.dp, end = 20.dp),
         )
@@ -183,12 +250,12 @@ fun SpotCard(
 
 @Composable
 fun SwipeStamp(
-    icon:     ImageVector,
+    icon:        ImageVector,
     description: String,
-    color:    Color,
-    alpha:    Float,
-    rotation: Float,
-    modifier: Modifier = Modifier,
+    color:       Color,
+    alpha:       Float,
+    rotation:    Float,
+    modifier:    Modifier = Modifier,
 ) {
     val animAlpha by animateFloatAsState(targetValue = alpha, label = "stampAlpha")
     Icon(
@@ -200,46 +267,7 @@ fun SwipeStamp(
             .border(width = 3.dp, color, CircleShape)
             .padding(horizontal = 7.dp, vertical = 7.dp),
         tint = color,
-        )
-}
-
-// ─── SwipeButtons ─────────────────────────────────────────────────────────────
-
-@Composable
-fun SwipeButtons(
-    onDismiss: () -> Unit,
-    onFollow:  () -> Unit,
-    modifier:  Modifier = Modifier,
-) {
-    Row(
-        modifier              = modifier.fillMaxSize(),
-        horizontalArrangement = Arrangement.spacedBy(40.dp),
-        verticalAlignment     = Alignment.Bottom,
-    ) {
-        FilledIconButton(
-            onClick  = onDismiss,
-            modifier = Modifier.size(60.dp),
-            colors   = IconButtonDefaults.filledIconButtonColors(
-                containerColor = Color(0xFFFEE2E2),
-                contentColor   = Color(0xFFEF4444),
-            ),
-            shape = CircleShape,
-        ) {
-            Icon(Icons.Filled.Close,"Dismiss",modifier.size(30.dp))
-        }
-
-        FilledIconButton(
-            onClick  = onFollow,
-            modifier = Modifier.size(60.dp),
-            colors   = IconButtonDefaults.filledIconButtonColors(
-                containerColor = Color(0xFFDCFCE7),
-                contentColor   = Color(0xFF22C55E),
-            ),
-            shape = CircleShape,
-        ) {
-            Icon(Icons.Filled.Favorite,"Follow",modifier.size(30.dp))
-        }
-    }
+    )
 }
 
 // ─── EmptyFeedState ───────────────────────────────────────────────────────────

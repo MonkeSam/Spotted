@@ -9,39 +9,30 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class LoginViewModel(
+class SignupViewModel(
     private val userRepository: UserRepository
 ) : ViewModel() {
 
-    private val _user      = MutableStateFlow<User?>(null)
+    private val _user = MutableStateFlow<User?>(null)
     val user: StateFlow<User?> = _user
 
-    private val _error     = MutableStateFlow<String?>(null)
+    private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
-    init {
+    fun register(email: String, password: String, name: String, surname: String, imageBytes: ByteArray?, mimeType: String) {
         viewModelScope.launch {
             _isLoading.value = true
-            val result = userRepository.getCurrentUser()
-            if (result is Resource.Success) _user.value = result.data
-            _isLoading.value = false
-        }
-    }
+            // Passa TUTTI i parametri al repository
+            val result = userRepository.register(email, password, name, surname, imageBytes, mimeType)
 
-    fun login(email: String, password: String) {
-        viewModelScope.launch {
-            _isLoading.value = true
-            _error.value     = null
-
-            when (val result = userRepository.login(email, password)) {
-                is Resource.Success -> _user.value  = result.data
-                is Resource.Error   -> _error.value = result.message
+            when (result) {
+                is Resource.Success -> _user.value = result.data
+                is Resource.Error -> _error.value = result.message
                 is Resource.Loading -> {}
             }
-
             _isLoading.value = false
         }
     }

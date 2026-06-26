@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    res/xml/file_provider_paths.xml
+    Espone la cache dell'app come percorso condivisibile con la fotocamera di sistema.
+    Il nome "camera_photos" è arbitrario; "path=." copre l'intera cache dir.
+-->
+<paths>
+    <cache-path
+        name="camera_photos"
+        path="." />
+</paths>

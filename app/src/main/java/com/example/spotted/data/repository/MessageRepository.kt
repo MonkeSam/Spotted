@@ -10,26 +10,44 @@ import io.github.jan.supabase.postgrest.result.PostgrestResult
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
-object MessageRepository {
+class MessageRepository {
 
     private val db get() = SupabaseModule.client.from("Messages")
 
-    suspend fun getMessages(chatId: Long): Resource<List<Message>> = runCatching {
+    /** Restituisce tutti i messaggi di una chat, ordinati per data crescente. */
+    suspend fun getMessagesForChat(chatId: Long): Resource<List<Message>> = runCatching {
         db.select {
             filter { eq("chatId", chatId) }
-            order("sendTime", Order.ASCENDING)
+            order(column = "sendTime", order = Order.ASCENDING)
         }.decodeList<Message>()
     }.toResource()
 
+    /** Invia un nuovo messaggio nella chat indicata. */
     @OptIn(ExperimentalTime::class)
-    suspend fun sendMessage(userId: String, chatId: Long, text: String): Resource<PostgrestResult> = runCatching {
+    suspend fun sendMessage(
+        userId: String,
+        chatId: Long,
+        text: String
+    ): Resource<PostgrestResult> = runCatching {
         db.insert(
             Message(
-                userId   = userId,
+                userId = userId,
                 sendTime = Clock.System.now(),
-                message  = text,
-                chatId   = chatId
+                message = text,
+                chatId = chatId
             )
         )
     }.toResource()
+
+    /**
+     * Restituisce l'ultimo messaggio di una chat, o null se non ne esistono.
+     * Usato da FollowingViewModel per la preview nelle card.
+     */
+    suspend fun getLastMessage(chatId: Long): Message? = runCatching {
+        db.select {
+            filter { eq("chatId", chatId) }
+            order(column = "sendTime", order = Order.DESCENDING)
+            limit(count = 1)
+        }.decodeList<Message>().firstOrNull()
+    }.getOrNull()
 }
