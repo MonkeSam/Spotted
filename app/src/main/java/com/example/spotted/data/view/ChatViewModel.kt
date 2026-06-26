@@ -20,13 +20,18 @@ import kotlin.time.ExperimentalTime
 class ChatViewModel(
     private val userRepository: UserRepository,
     private val messageRepository: MessageRepository
-    ) : ViewModel() {
-    
+) : ViewModel() {
+
+    // Stato di autenticazione (osservabile)
+    private val _currentUserId = MutableStateFlow<String?>(null)
+    val currentUserId: StateFlow<String?> = _currentUserId.asStateFlow()
+
     private val _whoSent = MutableStateFlow<User?>(null)
-    val whoSent : StateFlow<User?> = _whoSent.asStateFlow()
+    val whoSent: StateFlow<User?> = _whoSent.asStateFlow()
+
     private val _messages = MutableStateFlow<List<Message>>(emptyList())
     val messages: StateFlow<List<Message>> = _messages.asStateFlow()
-    
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
@@ -36,14 +41,23 @@ class ChatViewModel(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
-    /** ID dell'utente autenticato; usato per distinguere i propri messaggi. */
-    val currentUserId: String? = SupabaseModule.client.auth.currentUserOrNull()?.id
-
-    // in ChatViewModel.kt
     private val _userMap = MutableStateFlow<Map<String, User>>(emptyMap())
     val userMap: StateFlow<Map<String, User>> = _userMap.asStateFlow()
 
+    init {
+        // Recupera l'ID utente corrente all'avvio e aggiorna il flusso
+        viewModelScope.launch {
+            _currentUserId.value = SupabaseModule.client.auth.currentUserOrNull()?.id
+        }
+    }
+
     fun loadMessages(chatId: Long) {
+        val uid = _currentUserId.value
+        if (uid == null) {
+            _error.value = "Utente non autenticato"
+            return
+        }
+
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
@@ -51,34 +65,34 @@ class ChatViewModel(
             when (val result = messageRepository.getMessagesForChat(chatId)) {
                 is Resource.Success -> {
                     _messages.value = result.data
-                    // Carica i dettagli degli utenti (escluso il corrente)
                     val userIds = result.data.map { it.userId }.distinct()
-                        .filter { it != currentUserId }
+                        .filter { it != uid }
                     if (userIds.isNotEmpty()) {
                         when (val userResult = userRepository.getUsersByIds(userIds)) {
                             is Resource.Success -> {
                                 _userMap.value = userResult.data.associateBy { it.id }
                             }
-                            is Resource.Error -> _error.value = "Errore caricamento utenti: ${userResult.message}"
+                            is Resource.Error -> {
+                                _error.value = "Errore caricamento utenti: ${userResult.message}"
+                            }
                             else -> {}
                         }
                     } else {
                         _userMap.value = emptyMap()
                     }
                 }
-                is Resource.Error -> _error.value = result.message
+                is Resource.Error -> {
+                    _error.value = result.message
+                }
                 is Resource.Loading -> {}
             }
             _isLoading.value = false
         }
     }
 
-    /**
-     * Invia un messaggio e ricarica la lista al termine.
-     * Se l'utente non è autenticato, imposta un errore e ritorna.
-     */
     fun sendMessage(chatId: Long, text: String) {
-        val uid = currentUserId ?: run {
+        val uid = _currentUserId.value
+        if (uid == null) {
             _error.value = "Utente non autenticato"
             return
         }
@@ -86,19 +100,14 @@ class ChatViewModel(
 
         viewModelScope.launch {
             _isSending.value = true
-
             when (val result = messageRepository.sendMessage(uid, chatId, text)) {
                 is Resource.Success -> loadMessages(chatId)
-                is Resource.Error   -> _error.value = result.message
+                is Resource.Error -> _error.value = result.message
                 is Resource.Loading -> { /* no-op */ }
             }
-
             _isSending.value = false
         }
     }
 
-    /** True se il messaggio è stato scritto dall'utente corrente. */
-    fun isFromMe(message: Message): Boolean = message.userId == currentUserId
-
-
+    fun isFromMe(message: Message): Boolean = message.userId == _currentUserId.value
 }

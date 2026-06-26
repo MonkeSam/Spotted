@@ -29,26 +29,25 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.time.ExperimentalTime
 
-// ─── ChatScreen ──────────────────────────────────────────────────────────────
-
 @Composable
 fun ChatScreen(
     postId: Long,
     innerPadding: PaddingValues,
 ) {
     val viewModel: ChatViewModel = koinViewModel()
-    val messages   by viewModel.messages.collectAsState()
-    val isLoading  by viewModel.isLoading.collectAsState()
-    val isSending  by viewModel.isSending.collectAsState()
-    val error      by viewModel.error.collectAsState()
+    val messages by viewModel.messages.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val isSending by viewModel.isSending.collectAsState()
+    val error by viewModel.error.collectAsState()
     val userMap by viewModel.userMap.collectAsState()
+    val currentUserId by viewModel.currentUserId.collectAsState()
 
-    // Carica i messaggi al primo avvio e ogni volta che cambia postId
-    LaunchedEffect(postId) {
-        viewModel.loadMessages(postId)
+    LaunchedEffect(postId, currentUserId) {
+        if (currentUserId != null) {
+            viewModel.loadMessages(postId)
+        }
     }
 
-    // Scrolla all'ultimo messaggio quando arrivano nuovi
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     LaunchedEffect(messages.size) {
@@ -67,14 +66,29 @@ fun ChatScreen(
             .padding(innerPadding)
             .imePadding()
     ) {
-
-        // ── Contenuto principale ──────────────────────────────────────────
         Box(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
         ) {
             when {
+                currentUserId == null -> {
+                    // Utente non autenticato: mostra loading o messaggio
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .padding(32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        CircularProgressIndicator()
+                        Text(
+                            text = "Caricamento profilo utente...",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
                 isLoading && messages.isEmpty() -> {
                     CircularProgressIndicator(
                         modifier = Modifier.align(Alignment.Center)
@@ -89,12 +103,12 @@ fun ChatScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Text(
-                            text  = "Errore nel caricamento",
+                            text = "Errore nel caricamento",
                             style = MaterialTheme.typography.titleSmall,
                             color = MaterialTheme.colorScheme.error
                         )
                         Text(
-                            text  = error ?: "",
+                            text = error ?: "",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -105,27 +119,27 @@ fun ChatScreen(
                 }
                 messages.isEmpty() -> {
                     Text(
-                        text     = "Nessun messaggio ancora.\nSii il primo a scrivere!",
+                        text = "Nessun messaggio ancora.\nSii il primo a scrivere!",
                         modifier = Modifier
                             .align(Alignment.Center)
                             .padding(32.dp),
-                        style    = MaterialTheme.typography.bodyMedium,
-                        color    = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
                 }
                 else -> {
                     LazyColumn(
-                        state          = listState,
-                        modifier       = Modifier.fillMaxSize(),
+                        state = listState,
+                        modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(messages, key = { it.id }) { message ->
                             MessageItem(
-                                message  = message,
+                                message = message,
                                 isFromMe = viewModel.isFromMe(message),
-                                userMap  = viewModel.userMap.value
+                                userMap = userMap // userMap è uno stato osservato, quando cambia, il composable si ricompone
                             )
                         }
                     }
@@ -133,34 +147,35 @@ fun ChatScreen(
             }
         }
 
-        // ── Input messaggio ───────────────────────────────────────────────
+        // Input messaggio (sempre visibile se autenticato)
         Surface(
             tonalElevation = 4.dp,
-            modifier       = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth()
         ) {
             Row(
                 modifier = Modifier
                     .padding(horizontal = 16.dp, vertical = 10.dp),
-                verticalAlignment      = Alignment.CenterVertically,
+                verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 OutlinedTextField(
-                    value         = messageText,
+                    value = messageText,
                     onValueChange = { messageText = it },
-                    placeholder   = { Text("Scrivi un messaggio...") },
-                    modifier      = Modifier.weight(1f),
-                    shape         = RoundedCornerShape(24.dp),
-                    maxLines      = 4,
+                    placeholder = { Text("Scrivi un messaggio...") },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(24.dp),
+                    maxLines = 4,
                     keyboardOptions = KeyboardOptions(
                         capitalization = KeyboardCapitalization.Sentences
                     ),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor   = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                        focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
                         unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                    )
+                    ),
+                    enabled = currentUserId != null && !isSending
                 )
 
-                val canSend = messageText.isNotBlank() && !isSending
+                val canSend = messageText.isNotBlank() && !isSending && currentUserId != null
 
                 IconButton(
                     onClick = {
@@ -169,7 +184,7 @@ fun ChatScreen(
                             messageText = ""
                         }
                     },
-                    enabled  = canSend,
+                    enabled = canSend,
                     modifier = Modifier
                         .clip(RoundedCornerShape(12.dp))
                         .background(
@@ -179,15 +194,15 @@ fun ChatScreen(
                 ) {
                     if (isSending) {
                         CircularProgressIndicator(
-                            modifier  = Modifier.size(20.dp),
+                            modifier = Modifier.size(20.dp),
                             strokeWidth = 2.dp,
-                            color     = MaterialTheme.colorScheme.onPrimary
+                            color = MaterialTheme.colorScheme.onPrimary
                         )
                     } else {
                         Icon(
-                            imageVector        = Icons.AutoMirrored.Filled.Send,
+                            imageVector = Icons.AutoMirrored.Filled.Send,
                             contentDescription = "Invia",
-                            tint               = if (canSend) MaterialTheme.colorScheme.onPrimary
+                            tint = if (canSend) MaterialTheme.colorScheme.onPrimary
                             else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -196,6 +211,8 @@ fun ChatScreen(
         }
     }
 }
+
+// MessageItem rimane invariato (è già corretto)
 
 // ─── MessageItem ─────────────────────────────────────────────────────────────
 
