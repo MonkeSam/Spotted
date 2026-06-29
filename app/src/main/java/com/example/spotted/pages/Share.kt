@@ -31,6 +31,7 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,7 +40,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,10 +51,10 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.spotted.data.model.Category
 import com.example.spotted.data.view.ShareViewModel
 import com.example.spotted.utils.PhotoPickerSection
+import com.example.spotted.utils.rememberPermissionDeniedHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -69,7 +69,9 @@ fun ShareScreen(
 ) {
     val viewModel: ShareViewModel = koinViewModel()
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
+    val (snackbarHostState, onPermissionDenied) = rememberPermissionDeniedHandler()
+
+
 
     // ── Stati del form ────────────────────────────────────────────────────
     var title by remember { mutableStateOf("") }
@@ -147,6 +149,7 @@ fun ShareScreen(
                     .padding(vertical = 28.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+
                 Text(
                     buildAnnotatedString {
                         withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.secondary)) {
@@ -158,7 +161,9 @@ fun ShareScreen(
                     },
                     fontSize = 36.sp
                 )
+
                 Spacer(Modifier.height(8.dp))
+
                 Surface(
                     shape = RoundedCornerShape(50),
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
@@ -171,6 +176,7 @@ fun ShareScreen(
                         fontWeight = FontWeight.SemiBold
                     )
                 }
+
             }
 
             // ── Form Principale ──────────────────────────────────────────────
@@ -316,10 +322,11 @@ fun ShareScreen(
                     ) {
                         Box(modifier = Modifier.padding(16.dp)) {
                             PhotoPickerSection(
-                                selectedUri     = selectedPhotoUri,
-                                onPhotoSelected = { uri -> selectedPhotoUri = uri },
-                                onPhotoRemoved  = { selectedPhotoUri = null },
-                                enabled         = !isLoading
+                                selectedUri        = selectedPhotoUri,
+                                onPhotoSelected    = { uri -> selectedPhotoUri = uri },
+                                onPhotoRemoved     = { selectedPhotoUri = null },
+                                enabled            = !isLoading,
+                                onPermissionDenied = onPermissionDenied
                             )
                         }
                     }
@@ -389,7 +396,14 @@ fun ShareScreen(
                     Text("Pubblica Spot", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
+
         }
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 84.dp) // 52dp altezza bottone + 16dp padding top + 16dp padding bottom
+        )
     }
 }
 

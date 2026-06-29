@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
@@ -41,7 +42,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.spotted.R
 import com.example.spotted.ui.theme.ThemeMode
+import com.example.spotted.utils.rememberPermissionDeniedHandler
 import com.example.spotted.viewmodel.ProfileViewModel
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import java.io.File
 
@@ -54,7 +57,8 @@ fun ProfileScreen(
     val viewModel: ProfileViewModel = koinViewModel()
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
-
+    val activity = LocalActivity.current!!
+    val (snackbarHostState, onPermissionDenied) = rememberPermissionDeniedHandler()
     // Stati per la gestione della foto e dei permessi
     var showDialogChooser by remember { mutableStateOf(false) }
     var cameraImageUri by remember { mutableStateOf<Uri?>(null) }
@@ -72,6 +76,7 @@ fun ProfileScreen(
             e.printStackTrace()
         }
     }
+
 
     // Launcher Galleria
     val galleryLauncher = rememberLauncherForActivityResult(
@@ -92,157 +97,172 @@ fun ProfileScreen(
     // Richiesta permessi Fotocamera
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
+    ) { isGranted ->
         if (isGranted) {
-            val uri = createImageUri(context)
+            val uri = createSignupImageUri(context) // createImageUri in Profile.kt
             cameraImageUri = uri
             cameraLauncher.launch(uri)
+        } else {
+            val permanentlyDenied = !activity.shouldShowRequestPermissionRationale(
+                Manifest.permission.CAMERA
+            )
+            onPermissionDenied(permanentlyDenied) // ← una sola riga
         }
     }
 
-    if (state.isLoading) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
-        }
-        return
-    }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(innerPadding)
-            .verticalScroll(rememberScrollState())
-    ) {
-        // ── Sezione Avatar interattiva ───────────────────────────────
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 28.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Struttura a Box sovrapposti (Avatar + Bottone di Edit in basso a destra)
-            Box(
+    Box(modifier = Modifier.fillMaxSize()){
+        if (state.isLoading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        }
+        else{
+            Column(
                 modifier = Modifier
-                    .size(100.dp)
-                    .clickable { showDialogChooser = true },
-                contentAlignment = Alignment.BottomEnd
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .verticalScroll(rememberScrollState())
             ) {
-                // Cerchio Principale Avatar
-                Box(
+                // ── Sezione Avatar interattiva ───────────────────────────────
+                Column(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer),
-                    contentAlignment = Alignment.Center
+                        .fillMaxWidth()
+                        .padding(vertical = 28.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    if (!state.user?.profilePicture.isNullOrEmpty()) {
-                        AsyncImage(
-                            model = state.user?.profilePicture,
-                            contentDescription = "Profile Picture",
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
-                        )
-                    } else {
-                        Icon(
-                            painter = painterResource(R.drawable.remove_24px),
-                            contentDescription = null,
-                            modifier = Modifier.size(48.dp),
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
-                        )
-                    }
-
-                    // Loader in overlay se l'immagine si sta caricando
-                    if (state.isImageUploading) {
+                    // Struttura a Box sovrapposti (Avatar + Bottone di Edit in basso a destra)
+                    Box(
+                        modifier = Modifier
+                            .size(100.dp)
+                            .clickable { showDialogChooser = true },
+                        contentAlignment = Alignment.BottomEnd
+                    ) {
+                        // Cerchio Principale Avatar
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .background(Color.Black.copy(alpha = 0.4f)),
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primaryContainer),
                             contentAlignment = Alignment.Center
                         ) {
-                            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(30.dp))
+                            if (!state.user?.profilePicture.isNullOrEmpty()) {
+                                AsyncImage(
+                                    model = state.user?.profilePicture,
+                                    contentDescription = "Profile Picture",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else {
+                                Icon(
+                                    painter = painterResource(R.drawable.remove_24px),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(48.dp),
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
+                                )
+                            }
+
+                            // Loader in overlay se l'immagine si sta caricando
+                            if (state.isImageUploading) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .background(Color.Black.copy(alpha = 0.4f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(30.dp))
+                                }
+                            }
                         }
+
+                        // Badge della Matita posizionato in basso a destra
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primary)
+                                .border(2.dp, MaterialTheme.colorScheme.surface, CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Create,
+                                contentDescription = "Modifica foto",
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(Modifier.height(14.dp))
+
+                    val displayName = state.user?.let { user ->
+                        listOfNotNull(user.name, user.surname).joinToString(" ")
+                            .ifBlank { user.email }
+                    } ?: "Utente Sconosciuto"
+
+                    Text(
+                        text = displayName,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Spacer(Modifier.height(8.dp))
+
+                    Surface(
+                        shape = RoundedCornerShape(50),
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                    ) {
+                        Text(
+                            text = "Campus di Bologna",
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
                     }
                 }
 
-                // Badge della Matita posizionato in basso a destra
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary)
-                        .border(2.dp, MaterialTheme.colorScheme.surface, CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Create,
-                        contentDescription = "Modifica foto",
-                        tint = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.size(16.dp)
+
+
+                Spacer(Modifier.height(24.dp))
+
+                // ── Impostazioni app ─────────────────────────────────────
+                MySectionLabel("IMPOSTAZIONI APP")
+
+                SettingsCard {
+                    ThemeSelectorItem(
+                        currentTheme = state.currentTheme,
+                        onThemeSelected = { viewModel.updateTheme(it) }
+                    )
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                    LinkItem(
+                        painter = Icons.AutoMirrored.Filled.ExitToApp,
+                        label = "Esci",
+                        onClick = {
+                            viewModel.logout { navigate() }
+                        }
+                    )
+                }
+
+                // Messaggio di errore se presente
+                state.errorMessage?.let { msg ->
+                    Text(
+                        text = msg,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(16.dp),
+                        style = MaterialTheme.typography.bodySmall
                     )
                 }
             }
-
-            Spacer(Modifier.height(14.dp))
-
-            val displayName = state.user?.let { user ->
-                listOfNotNull(user.name, user.surname).joinToString(" ")
-                    .ifBlank { user.email }
-            } ?: "Utente Sconosciuto"
-
-            Text(
-                text = displayName,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(Modifier.height(8.dp))
-
-            Surface(
-                shape = RoundedCornerShape(50),
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-            ) {
-                Text(
-                    text = "Campus di Bologna",
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
         }
-
-
-
-        Spacer(Modifier.height(24.dp))
-
-        // ── Impostazioni app ─────────────────────────────────────
-        MySectionLabel("IMPOSTAZIONI APP")
-
-        SettingsCard {
-            ThemeSelectorItem(
-                currentTheme = state.currentTheme,
-                onThemeSelected = { viewModel.updateTheme(it) }
-            )
-            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-            LinkItem(
-                painter = Icons.AutoMirrored.Filled.ExitToApp,
-                label = "Esci",
-                onClick = {
-                    viewModel.logout { navigate() }
-                }
-            )
-        }
-
-        // Messaggio di errore se presente
-        state.errorMessage?.let { msg ->
-            Text(
-                text = msg,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(16.dp),
-                style = MaterialTheme.typography.bodySmall
-            )
-        }
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = innerPadding.calculateBottomPadding())
+        )
     }
+
 
     // Dialog Classico di scelta sorgente Foto (Galleria o Fotocamera)
     if (showDialogChooser) {
@@ -263,7 +283,7 @@ fun ProfileScreen(
                     showDialogChooser = false
                     val permissionCheck = ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
                     if (permissionCheck == PackageManager.PERMISSION_GRANTED) {
-                        val uri = createImageUri(context)
+                        val uri = createSignupImageUri(context)
                         cameraImageUri = uri
                         cameraLauncher.launch(uri)
                     } else {
@@ -278,16 +298,15 @@ fun ProfileScreen(
 }
 
 // Funzione di utilità per creare un URI temporaneo per la fotocamera
-private fun createImageUri(context: Context): Uri {
-    // Il file viene creato in cacheDir, che corrisponde perfettamente a <cache-path> nel tuo file_provider_paths.xml
-    val tempFile = File.createTempFile("avatar_capture_", ".jpg", context.cacheDir).apply {
+private fun createSignupImageUri(context: Context): Uri {
+    val tempFile = File.createTempFile("signup_capture_", ".jpg", context.cacheDir).apply {
         createNewFile()
         deleteOnExit()
     }
 
     return FileProvider.getUriForFile(
         context,
-        "${context.packageName}.provider", // <--- AGGIORNATO: ora coincide perfettamente con il tuo Manifest!
+        "${context.packageName}.provider",
         tempFile
     )
 }

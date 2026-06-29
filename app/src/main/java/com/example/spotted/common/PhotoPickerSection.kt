@@ -5,6 +5,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.border
@@ -69,10 +70,11 @@ fun PhotoPickerSection(
     selectedUri: Uri?,
     onPhotoSelected: (Uri) -> Unit,
     onPhotoRemoved: () -> Unit,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    onPermissionDenied: (permanentlyDenied: Boolean) -> Unit = {}
 ) {
     val context = LocalContext.current
-
+    val activity = LocalActivity.current!!
     // URI temporaneo per la fotocamera: viene ricreato solo alla prima composizione
     val cameraUri: Uri = remember {
         val tempFile = File(context.cacheDir, "spotted_temp_photo.jpg")
@@ -97,14 +99,30 @@ fun PhotoPickerSection(
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { granted ->
-        if (granted) cameraLauncher.launch(cameraUri)
+        if (granted) {
+            cameraLauncher.launch(cameraUri)
+        } else {
+            val permanentlyDenied = !activity.shouldShowRequestPermissionRationale(
+                Manifest.permission.CAMERA
+            )
+            onPermissionDenied(permanentlyDenied)
+        }
     }
 
     // ── Launcher permesso storage (galleria) ─────────────────────────────
     val storagePermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { granted ->
-        if (granted) galleryLauncher.launch("image/*")
+        if (granted) {
+            galleryLauncher.launch("image/*")
+        } else {
+            val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                Manifest.permission.READ_MEDIA_IMAGES
+            else
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            val permanentlyDenied = !activity.shouldShowRequestPermissionRationale(permission)
+            onPermissionDenied(permanentlyDenied)
+        }
     }
 
     // ── Funzioni di avvio con controllo permessi ─────────────────────────

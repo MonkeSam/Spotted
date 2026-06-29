@@ -1,6 +1,7 @@
 package com.example.spotted.pages
 
 import android.Manifest
+import android.content.pm.PackageManager
 import android.graphics.Color as AndroidColor
 import android.graphics.drawable.GradientDrawable
 import android.view.Gravity
@@ -21,7 +22,6 @@ import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,11 +34,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.spotted.R
 import com.example.spotted.data.view.MapViewModel
 import com.example.spotted.utils.gps.LocationService
@@ -59,8 +59,7 @@ import org.osmdroid.views.overlay.infowindow.InfoWindow
 @Composable
 fun MapScreen(
     innerPadding: PaddingValues,
-    navigate: (Long) -> Unit,
-    onPermissionDenied: (permanentlyDenied: Boolean) -> Unit
+    navigate: (Long) -> Unit
 ) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -72,24 +71,28 @@ fun MapScreen(
     val mapViewModel: MapViewModel = koinViewModel()
     val followedPosts by mapViewModel.followedPosts.collectAsState()
 
-
+    // Stato reattivo locale per decidere se mostrare la Mappa o la schermata NoGps
+    var hasLocationPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                    ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        )
+    }
 
     val locationPermissions = rememberMultiplePermissions(
         listOf(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION)
     ) { statuses ->
-        when {
-            statuses.any { it.value == PermissionStatus.Granted } ->
-                scope.launch { locationService.getCurrentLocation() } // ← Corretto qui
-            statuses.all { it.value == PermissionStatus.PermanentlyDenied } ->
-                onPermissionDenied(true)
-            else ->
-                onPermissionDenied(false)
+        val granted = statuses.any { it.value.isGranted }
+        hasLocationPermission = granted
+        if (granted) {
+            scope.launch { locationService.getCurrentLocation() }
         }
     }
 
-    fun getLocationOrRequestPermission() {
-        if (locationPermissions.statuses.any { it.value.isGranted }) {
-            scope.launch { locationService.getCurrentLocation() } // ← Corretto qui
+    // Unico punto di ingresso iniziale controllato
+    LaunchedEffect(Unit) {
+        if (hasLocationPermission) {
+            locationService.getCurrentLocation()
         } else {
             locationPermissions.launchPermissionRequest()
         }
@@ -105,8 +108,6 @@ fun MapScreen(
         Configuration.getInstance().userAgentValue = ctx.packageName
     }
 
-    SideEffect { getLocationOrRequestPermission() }
-
     val mapView = remember {
         MapView(ctx).apply {
             setTileSource(TileSourceFactory.MAPNIK)
@@ -119,21 +120,16 @@ fun MapScreen(
     LaunchedEffect(coordinates, followedPosts) {
         mapView.overlays.clear()
 
-        // 0. Aggiungiamo il ricevitore di eventi per chiudere le InfoWindow al tap sulla mappa
         val mapEventsReceiver = object : MapEventsReceiver {
             override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
                 InfoWindow.closeAllInfoWindowsOn(mapView)
                 return false
             }
-
-            override fun longPressHelper(p: GeoPoint?): Boolean {
-                return false
-            }
+            override fun longPressHelper(p: GeoPoint?): Boolean { return false }
         }
         val mapEventsOverlay = MapEventsOverlay(mapEventsReceiver)
         mapView.overlays.add(mapEventsOverlay)
 
-        // 1. Marker posizione utente (senza info window)
         coordinates?.let { coords ->
             val point = GeoPoint(coords.latitude, coords.longitude)
             mapView.controller.setCenter(point)
@@ -146,10 +142,8 @@ fun MapScreen(
             }
         }
 
-        // 2. Marker per ogni post seguito con coordinate
         followedPosts.forEach { post ->
             val point = GeoPoint(post.latitude!!, post.longitude!!)
-
             val dp = ctx.resources.displayMetrics.density
             val bubbleView = LinearLayout(ctx).apply {
                 orientation = LinearLayout.VERTICAL
@@ -213,19 +207,24 @@ fun MapScreen(
                 mapView.overlays.add(this)
             }
         }
-
         mapView.invalidate()
     }
 
-    // ── Lifecycle: gestione mappa + reload dei post ad ogni ON_RESUME ────────
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_RESUME  -> {
                     mapView.onResume()
-                    // Ricarica i post seguiti ogni volta che la schermata
-                    // torna visibile, così i nuovi follow vengono mostrati
                     mapViewModel.loadFollowedPostsWithLocation()
+
+                    // Rileva se l'utente ha garantito i permessi tornando dalle impostazioni di sistema
+                    val coarseGranted = ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                    val fineGranted = ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+
+                    if (coarseGranted || fineGranted) {
+                        hasLocationPermission = true
+                        scope.launch { locationService.getCurrentLocation() }
+                    }
                 }
                 Lifecycle.Event.ON_PAUSE   -> mapView.onPause()
                 Lifecycle.Event.ON_DESTROY -> mapView.onDetach()
@@ -240,44 +239,61 @@ fun MapScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        AndroidView(
-            factory  = { mapView },
-            modifier = Modifier.fillMaxSize()
-        )
+        if (hasLocationPermission) {
+            // Se i permessi sono attivi, la mappa riempie lo schermo (disegnando anche sotto le barre sfocate)
+            AndroidView(
+                factory  = { mapView },
+                modifier = Modifier.fillMaxSize()
+            )
 
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(
-                    end    = 16.dp,
-                    bottom = innerPadding.calculateBottomPadding() + 16.dp
-                ),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            SmallFloatingActionButton(
-                onClick = {
-                    coordinates?.let { coords ->
-                        mapView.controller.setZoom(16.0)
-                        mapView.controller.setCenter(GeoPoint(coords.latitude, coords.longitude))
-                    }
-                },
-                containerColor = MaterialTheme.colorScheme.surface
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(
+                        end    = 16.dp,
+                        bottom = innerPadding.calculateBottomPadding() + 16.dp
+                    ),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Icon(Icons.Filled.LocationOn, contentDescription = "La mia posizione")
+                SmallFloatingActionButton(
+                    onClick = {
+                        coordinates?.let { coords ->
+                            mapView.controller.setZoom(16.0)
+                            mapView.controller.setCenter(GeoPoint(coords.latitude, coords.longitude))
+                        }
+                    },
+                    containerColor = MaterialTheme.colorScheme.surface
+                ) {
+                    Icon(Icons.Filled.LocationOn, contentDescription = "La mia posizione")
+                }
+
+                SmallFloatingActionButton(
+                    onClick = { mapView.controller.zoomIn() },
+                    containerColor = MaterialTheme.colorScheme.surface
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Zoom in")
+                }
+
+                SmallFloatingActionButton(
+                    onClick = { mapView.controller.zoomOut() },
+                    containerColor = MaterialTheme.colorScheme.surface
+                ) {
+                    Icon(painterResource(R.drawable.remove_24px), contentDescription = "Zoom out")
+                }
             }
-
-            SmallFloatingActionButton(
-                onClick = { mapView.controller.zoomIn() },
-                containerColor = MaterialTheme.colorScheme.surface
+        } else {
+            // Se mancano i permessi, incapsuliamo NoGpsMap dentro i margini dello Scaffold per non sovrapporsi alle barre
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Zoom in")
-            }
-
-            SmallFloatingActionButton(
-                onClick = { mapView.controller.zoomOut() },
-                containerColor = MaterialTheme.colorScheme.surface
-            ) {
-                Icon(painterResource(R.drawable.remove_24px), contentDescription = "Zoom out")
+                val isPermanentlyDenied = locationPermissions.statuses.values.all { it == PermissionStatus.PermanentlyDenied }
+                NoGpsMap(
+                    permanentlyDenied = isPermanentlyDenied,
+                    onRequestPermission = { locationPermissions.launchPermissionRequest() }
+                )
             }
         }
     }

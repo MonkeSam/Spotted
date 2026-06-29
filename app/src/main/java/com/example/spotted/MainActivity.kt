@@ -27,7 +27,6 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.example.spotted.common.FloatingProfile
 import com.example.spotted.common.SectionsBar
-import com.example.spotted.data.di.appModule
 import com.example.spotted.pages.ChatScreen
 import com.example.spotted.pages.FollowingScreen
 import com.example.spotted.pages.LoginScreen
@@ -46,8 +45,6 @@ import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
-import org.koin.android.ext.koin.androidContext
-import org.koin.core.context.GlobalContext.startKoin
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -77,11 +74,12 @@ class MainActivity : ComponentActivity() {
                     (currentDestination?.hasRoute(NavigationRoute.Chat::class) == true) or
                             (currentDestination?.hasRoute(NavigationRoute.Profile::class) == true)
 
-                val showNavigationBar =
+                val dontShowNavigationBar =
                     (currentDestination?.hasRoute(NavigationRoute.Login::class) == true) or
                             (currentDestination?.hasRoute(NavigationRoute.Signup::class) == true) or
                             (currentDestination?.hasRoute(NavigationRoute.Chat::class) == true) or
                             (currentDestination?.hasRoute(NavigationRoute.Profile::class) == true)
+
 
                 val showTopBar =
                     (currentDestination?.hasRoute(NavigationRoute.Login::class) == true) or
@@ -93,7 +91,7 @@ class MainActivity : ComponentActivity() {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     bottomBar = {
-                        if (!showNavigationBar) {
+                        if (!dontShowNavigationBar) {
                             SectionsBar(
                                 navController = navController,
                                 modifier = Modifier.hazeChild(
@@ -120,7 +118,11 @@ class MainActivity : ComponentActivity() {
                                         blurRadius = 15.dp,
                                     )
                                 ),
-                                onNavigateToProfile = { navController.navigate(NavigationRoute.Profile) },
+                                onNavigateToProfile = {
+                                    navController.navigate(
+                                        NavigationRoute.Profile){
+                                        launchSingleTop = true }
+                                                      },
                                 onNavigateBack = { navController.popBackStack() },
                                 show = showBackButton
                             )
@@ -149,23 +151,8 @@ class MainActivity : ComponentActivity() {
 
             composable<NavigationRoute.Map> {
                 MapScreen(
-                    innerPadding      = innerPadding,
-                    navigate          = { chatId -> navController.navigate(NavigationRoute.Chat(chatId)) },
-                    onPermissionDenied = { permanentlyDenied ->
-                        navController.navigate(NavigationRoute.NoGpsMap(permanentlyDenied))
-                    }
-                )
-            }
-
-            composable<NavigationRoute.NoGpsMap> { backStackEntry ->
-                val route: NavigationRoute.NoGpsMap = backStackEntry.toRoute()
-                NoGpsMap(
-                    permanentlyDenied    = route.permanentlyDenied,
-                    onRequestPermission  = {
-                        navController.navigate(NavigationRoute.Map) {
-                            popUpTo(NavigationRoute.NoGpsMap(route.permanentlyDenied)) { inclusive = true }
-                        }
-                    }
+                    innerPadding = innerPadding,
+                    navigate     = { chatId -> navController.navigate(NavigationRoute.Chat(chatId)) }
                 )
             }
 
