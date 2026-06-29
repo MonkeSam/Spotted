@@ -59,13 +59,11 @@ import org.osmdroid.views.overlay.infowindow.InfoWindow
 @Composable
 fun MapScreen(
     innerPadding: PaddingValues,
-    navigate: (Long) -> Unit
+    navigate: (Long) -> Unit,
+    onPermissionDenied: (permanentlyDenied: Boolean) -> Unit
 ) {
     val ctx = LocalContext.current
-
-    var showLocationDisabledAlert by remember { mutableStateOf(false) }
-    var showPermissionDeniedAlert by remember { mutableStateOf(false) }
-    var showPermissionPermanentlyDeniedSnackbar by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     val locationService = remember { LocationService(ctx) }
     val coordinates by locationService.coordinates.collectAsStateWithLifecycle()
@@ -74,31 +72,24 @@ fun MapScreen(
     val mapViewModel: MapViewModel = koinViewModel()
     val followedPosts by mapViewModel.followedPosts.collectAsState()
 
-    val scope = rememberCoroutineScope()
-    fun getCurrentLocation() = scope.launch {
-        try {
-            locationService.getCurrentLocation()
-        } catch (_: IllegalStateException) {
-            showLocationDisabledAlert = true
-        }
-    }
+
 
     val locationPermissions = rememberMultiplePermissions(
         listOf(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION)
     ) { statuses ->
         when {
             statuses.any { it.value == PermissionStatus.Granted } ->
-                getCurrentLocation()
+                scope.launch { locationService.getCurrentLocation() } // ← Corretto qui
             statuses.all { it.value == PermissionStatus.PermanentlyDenied } ->
-                showPermissionPermanentlyDeniedSnackbar = true
+                onPermissionDenied(true)
             else ->
-                showPermissionDeniedAlert = true
+                onPermissionDenied(false)
         }
     }
 
     fun getLocationOrRequestPermission() {
         if (locationPermissions.statuses.any { it.value.isGranted }) {
-            getCurrentLocation()
+            scope.launch { locationService.getCurrentLocation() } // ← Corretto qui
         } else {
             locationPermissions.launchPermissionRequest()
         }

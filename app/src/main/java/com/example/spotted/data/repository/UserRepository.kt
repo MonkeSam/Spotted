@@ -26,7 +26,13 @@ class UserRepository {
         }
         Resource.Success(fetchCurrentUser())
     } catch (e: Exception) {
-        Resource.Error(e.message ?: "Errore nel login")
+        val message = when {
+            e.message?.contains("invalid_credentials", ignoreCase = true) == true ||
+                    e.message?.contains("Invalid login credentials", ignoreCase = true) == true ->
+                "Email o password non corretti"
+            else -> e.message ?: "Errore nel login"
+        }
+        Resource.Error(message)
     }
 
     suspend fun getCurrentUser(): Resource<User> = try {

@@ -32,6 +32,7 @@ import com.example.spotted.pages.ChatScreen
 import com.example.spotted.pages.FollowingScreen
 import com.example.spotted.pages.LoginScreen
 import com.example.spotted.pages.MapScreen
+import com.example.spotted.pages.NoGpsMap
 import com.example.spotted.pages.ProfileScreen
 import com.example.spotted.pages.ShareScreen
 import com.example.spotted.pages.SignupScreen
@@ -146,11 +147,25 @@ class MainActivity : ComponentActivity() {
         ) {
             composable<NavigationRoute.Feed> { FeedScreen(innerPadding) }
 
-            // ✅ Passa il callback di navigazione alla chat
             composable<NavigationRoute.Map> {
                 MapScreen(
-                    innerPadding = innerPadding,
-                    navigate     = { chatId -> navController.navigate(NavigationRoute.Chat(chatId)) }
+                    innerPadding      = innerPadding,
+                    navigate          = { chatId -> navController.navigate(NavigationRoute.Chat(chatId)) },
+                    onPermissionDenied = { permanentlyDenied ->
+                        navController.navigate(NavigationRoute.NoGpsMap(permanentlyDenied))
+                    }
+                )
+            }
+
+            composable<NavigationRoute.NoGpsMap> { backStackEntry ->
+                val route: NavigationRoute.NoGpsMap = backStackEntry.toRoute()
+                NoGpsMap(
+                    permanentlyDenied    = route.permanentlyDenied,
+                    onRequestPermission  = {
+                        navController.navigate(NavigationRoute.Map) {
+                            popUpTo(NavigationRoute.NoGpsMap(route.permanentlyDenied)) { inclusive = true }
+                        }
+                    }
                 )
             }
 

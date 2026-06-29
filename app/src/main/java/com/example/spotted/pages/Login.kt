@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
@@ -26,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
@@ -43,6 +45,9 @@ fun LoginScreen(
     var email by remember { mutableStateOf(String()) }
     var password by remember { mutableStateOf(String()) }
     val viewModel: LoginViewModel = koinViewModel()
+    var localError by remember { mutableStateOf<String?>(null) }
+    var emailError by remember { mutableStateOf(false) }
+    var passwordError by remember { mutableStateOf(false) }
 
     val isLoading by viewModel.isLoading.collectAsState()
 
@@ -88,26 +93,41 @@ fun LoginScreen(
 
                 OutlinedTextField(
                     value = email,
-                    onValueChange = { email = it },
+                    onValueChange = {
+                        email = it
+                        emailError = false
+                        localError = null
+                    },
                     label = { Text("Email") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("nome.cognomeNN@studio.unibo.it") }
+                    placeholder = { Text("nome.cognomeNN@studio.unibo.it") },
+                    isError = emailError,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
                 )
 
                 OutlinedTextField(
                     value = password,
-                    onValueChange = { password = it },
+                    onValueChange = {
+                        password = it
+                        passwordError = false
+                        localError = null
+                    },
                     label = { Text("Password") },
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
+                    isError = passwordError,
                 )
 
-                // Mostra il messaggio di errore se presente
-                if (error != null) {
+
+
+
+                // Gestione errore: locale ha priorità, altrimenti controlla risposta Supabase
+                val displayError = localError ?: error
+                if (displayError != null) {
                     Text(
-                        text = error!!,
+                        text = displayError,
                         color = MaterialTheme.colorScheme.error,
                         fontSize = 14.sp,
                         modifier = Modifier.fillMaxWidth()
@@ -115,7 +135,28 @@ fun LoginScreen(
                 }
 
                 Button(
-                    onClick = { viewModel.login(email, password) },
+                    onClick = {
+                        localError = null
+                        emailError = false
+                        passwordError = false
+
+                        when {
+                            email.isBlank() && password.isBlank() -> {
+                                emailError = true
+                                passwordError = true
+                                localError = "Inserisci email e password"
+                            }
+                            email.isBlank() -> {
+                                emailError = true
+                                localError = "Inserisci la tua email"
+                            }
+                            password.isBlank() -> {
+                                passwordError = true
+                                localError = "Inserisci la tua password"
+                            }
+                            else -> viewModel.login(email, password)
+                        }
+                    },
                     enabled = !isLoading,
                     modifier = Modifier
                         .fillMaxWidth()

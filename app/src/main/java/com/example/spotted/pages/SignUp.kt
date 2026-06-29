@@ -7,6 +7,7 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
@@ -39,11 +41,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
@@ -53,6 +57,7 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.spotted.data.view.SignupViewModel
+import org.koin.androidx.compose.koinViewModel
 import java.io.File
 
 @Composable
@@ -74,10 +79,12 @@ fun SignupScreen(
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     var localError by remember { mutableStateOf<String?>(null) }
 
-    val viewModel: SignupViewModel = viewModel()
+    val viewModel: SignupViewModel = koinViewModel()
     val isLoading by viewModel.isLoading.collectAsState()
     val serverError by viewModel.error.collectAsState()
     val user by viewModel.user.collectAsState()
+    var emailError by remember { mutableStateOf(false) }
+    var imageError by remember { mutableStateOf(false) }
 
     // ── Launchers ────────────────────────────────────────────────────────
     val galleryLauncher = rememberLauncherForActivityResult(
@@ -145,8 +152,20 @@ fun SignupScreen(
                     modifier = Modifier
                         .size(100.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .clickable { showDialogChooser = true }, // <- Apre il dialog
+                        .background(
+                            if (imageError) MaterialTheme.colorScheme.errorContainer
+                            else MaterialTheme.colorScheme.surfaceVariant
+                        )
+                        .border( // ← bordo rosso se errore
+                            width = 2.dp,
+                            color = if (imageError) MaterialTheme.colorScheme.error
+                            else Color.Transparent,
+                            shape = CircleShape
+                        )
+                        .clickable {
+                            imageError = false // reset errore al click
+                            showDialogChooser = true
+                        },
                     contentAlignment = Alignment.Center
                 ) {
                     if (imageUri != null) {
@@ -161,15 +180,18 @@ fun SignupScreen(
                             imageVector = Icons.Default.Person,
                             contentDescription = "Placeholder",
                             modifier = Modifier.size(50.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = if (imageError) MaterialTheme.colorScheme.error
+                            else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
 
                 Text(
-                    text = "Tocca per aggiungere una foto",
+                    text = if (imageError) "Foto profilo mancante"
+                    else "Tocca per aggiungere una foto",
                     fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = if (imageError) MaterialTheme.colorScheme.error
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
 
@@ -191,11 +213,26 @@ fun SignupScreen(
 
                 OutlinedTextField(
                     value = email,
-                    onValueChange = { email = it },
+                    onValueChange = {
+                        email = it
+                        emailError = it.isNotBlank() && !isValidEmail(it) // valida mentre scrivi
+                    },
                     label = { Text("Email") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("nome.cognomeNN@studio.unibo.it") }
+                    placeholder = { Text("nome.cognomeNN@studio.unibo.it") },
+                    isError = emailError,
+                    supportingText = {
+                        if (emailError) {
+                            Text(
+                                text = "Formato email non valido",
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Email // mostra la tastiera email
+                    )
                 )
 
                 OutlinedTextField(
@@ -229,8 +266,14 @@ fun SignupScreen(
                 Button(
                     onClick = {
                         localError = null
-                        if (email.isBlank() || password.isBlank() || name.isBlank() || surname.isBlank()) {
+                        if (imageUri == null) { // ← nuovo controllo
+                            imageError = true
+                            localError = "Carica una foto profilo per continuare"
+                        } else if (email.isBlank() || password.isBlank() || name.isBlank() || surname.isBlank()) {
                             localError = "Compila tutti i campi obbligatori"
+                        }else if (!isValidEmail(email)) {
+                            emailError = true
+                            localError = "Inserisci un'email valida"
                         } else if (password != confirmPassword) {
                             localError = "Le password non coincidono"
                         } else if (password.length < 6) {
@@ -316,4 +359,8 @@ private fun createSignupImageUri(context: Context): Uri {
         "${context.packageName}.provider",
         tempFile
     )
+}
+fun isValidEmail(email: String): Boolean {
+    return email.endsWith("@studio.unibo.it") &&
+            android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
 }

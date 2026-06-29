@@ -15,4 +15,6 @@ sealed interface NavigationRoute{
     @Serializable data object Share: NavigationRoute
 
     @Serializable data object Signup: NavigationRoute
+
+    @Serializable data class NoGpsMap(val permanentlyDenied: Boolean = false) : NavigationRoute
 }
