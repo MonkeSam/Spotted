@@ -79,10 +79,12 @@ dependencies {
     implementation("io.github.jan-tennert.supabase:postgrest-kt")
     implementation("io.github.jan-tennert.supabase:storage-kt")
     implementation("io.github.jan-tennert.supabase:auth-kt")
-    implementation("io.ktor:ktor-client-android:3.0.0")
+    implementation("io.github.jan-tennert.supabase:realtime-kt")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
     implementation("io.coil-kt:coil-compose:2.6.0")
     implementation("io.insert-koin:koin-androidx-compose:4.0.2")
+    implementation("io.ktor:ktor-client-okhttp:3.0.0") // o la versione coerente con il resto dei tuoi ktor-client
+
 
 
     testImplementation(libs.junit)

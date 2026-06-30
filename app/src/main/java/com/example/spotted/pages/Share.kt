@@ -113,20 +113,6 @@ fun ShareScreen(
         }
     }
 
-    // ── Funzione helper per il geocoding asincrono ────────────────────────
-    suspend fun findCoordinates(indirizzo: String) {
-        isSearchingLocation = true
-        locationError = false
-        val result = getCoordinatesFromAddress(context, indirizzo)
-        if (result != null) {
-            coordinates = result
-        } else {
-            locationError = true
-            coordinates = null
-        }
-        isSearchingLocation = false
-    }
-
     // BOX RADICE
     Box(
         modifier = Modifier

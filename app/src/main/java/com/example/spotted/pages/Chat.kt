@@ -28,6 +28,7 @@ import org.koin.androidx.compose.koinViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.time.ExperimentalTime
+import androidx.compose.ui.platform.LocalLocale
 
 @Composable
 fun ChatScreen(
@@ -162,12 +163,17 @@ fun ChatScreen(
                     value = messageText,
                     onValueChange = { messageText = it },
                     placeholder = { Text("Scrivi un messaggio...") },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = 56.dp, max = 150.dp), // Espansione fluida
                     shape = RoundedCornerShape(24.dp),
-                    maxLines = 4,
-                    keyboardOptions = KeyboardOptions(
-                        capitalization = KeyboardCapitalization.Sentences
-                    ),
+                    maxLines = 6, // Evita i crash da misurazione infinita
+                    minLines = 1,
+
+                    // 🔴 LA SOLUZIONE: Usa le opzioni di default.
+                    // Rimuovere la capitalizzazione automatica previene i crash con gli "a capo"
+                    keyboardOptions = KeyboardOptions.Default,
+
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
                         unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
@@ -271,7 +277,7 @@ fun MessageItem(
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
-                    text = SimpleDateFormat("HH:mm", Locale.getDefault())
+                    text = SimpleDateFormat("HH:mm", LocalLocale.current.platformLocale)
                         .format(Date(message.sendTime.toEpochMilliseconds())),
                     style = MaterialTheme.typography.labelSmall,
                     color = textColor.copy(alpha = 0.7f),
