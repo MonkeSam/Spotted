@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.spotted.data.view.LoginViewModel
+import com.example.spotted.ui.theme.AppLogo
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -79,16 +80,10 @@ fun LoginScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Text(
-                    buildAnnotatedString {
-                        withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.secondary)) {
-                            append("Spotted")
-                        }
-                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)) {
-                            append("Unibo")
-                        }
-                    },
-                    fontSize = 40.sp
+                AppLogo(
+                    iconSize = 48,
+                    textSize = 34,
+                    modifier = Modifier.padding(vertical = 8.dp)
                 )
 
                 OutlinedTextField(

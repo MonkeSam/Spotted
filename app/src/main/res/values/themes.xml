@@ -137,6 +137,9 @@
         <item name="android:navigationBarColor">@color/neutral_10</item>
         <item name="android:windowLightNavigationBar">false</item>
 
+
+
+
     </style>
 
 
@@ -147,7 +150,7 @@
     ════════════════════════════════════════════════════ -->
     <style name="Theme.Spotted.Splash" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/unibo_red_40</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_logo</item>
         <item name="postSplashScreenTheme">@style/Theme.Spotted</item>
     </style>
 

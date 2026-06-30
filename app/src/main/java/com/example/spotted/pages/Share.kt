@@ -155,7 +155,7 @@ fun ShareScreen(
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                 ) {
                     Text(
-                        text = "Condividi col campus",
+                        text = "Condividi con il tuo campus",
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
                         color = MaterialTheme.colorScheme.primary,
                         style = MaterialTheme.typography.bodyMedium,

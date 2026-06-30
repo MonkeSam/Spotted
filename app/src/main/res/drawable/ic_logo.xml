@@ -1,0 +1,31 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+
+    <!-- Cerchio esterno grigio (istituzionale) -->
+    <path
+        android:pathData="M96,296 a160,160 0 1,0 320,0 a160,160 0 1,0 -320,0"
+        android:strokeColor="#53565A"
+        android:strokeWidth="10"
+        android:fillColor="#00000000" />
+
+    <!-- Anello interno rosso (trasparente 30%) -->
+    <path
+        android:pathData="M160,296 a96,96 0 1,0 192,0 a96,96 0 1,0 -192,0"
+        android:strokeColor="#4DBB2E29"
+        android:strokeWidth="6"
+        android:fillColor="#00000000" />
+
+    <!-- Puntino centrale rosso (Unibo Red) -->
+    <path
+        android:pathData="M208,296 a48,48 0 1,0 96,0 a48,48 0 1,0 -96,0"
+        android:fillColor="#BB2E29" />
+
+    <!-- Puntino piccolo in alto a destra (effetto "sguardo") -->
+    <path
+        android:pathData="M328,172 a12,12 0 1,0 24,0 a12,12 0 1,0 -24,0"
+        android:fillColor="#4DBB2E29" />
+
+</vector>

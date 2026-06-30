@@ -29,6 +29,7 @@ import androidx.compose.ui.layout.AlignmentLine
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hasRoute // IMPORTANTE per il controllo type-safe
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.spotted.ui.theme.AppLogo
 import com.example.spotted.utils.NavigationRoute
 import com.example.spotted.utils.Sections
 
@@ -97,7 +98,7 @@ fun FloatingProfile(
     show: Boolean
 ){
     CenterAlignedTopAppBar(
-        title = {},
+        title = {AppLogo(iconSize = 32, textSize = 20)},
         modifier,
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
             containerColor = Color.Transparent,

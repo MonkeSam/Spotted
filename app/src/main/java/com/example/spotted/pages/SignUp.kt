@@ -58,6 +58,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import coil.compose.AsyncImage
 import com.example.spotted.data.view.SignupViewModel
+import com.example.spotted.ui.theme.AppLogo
 import com.example.spotted.utils.rememberPermissionDeniedHandler
 import org.koin.androidx.compose.koinViewModel
 import java.io.File
@@ -146,12 +147,10 @@ fun SignupScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text(
-                        buildAnnotatedString {
-                            withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.secondary)) { append("Spotted") }
-                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)) { append("Unibo") }
-                        },
-                        fontSize = 32.sp
+                    AppLogo(
+                        iconSize = 42,
+                        textSize = 30,
+                        modifier = Modifier.padding(bottom = 8.dp)
                     )
 
                     // 📸 Componente per selezionare l'immagine del profilo

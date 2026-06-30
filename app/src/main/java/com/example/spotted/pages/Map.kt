@@ -1,7 +1,12 @@
 package com.example.spotted.pages
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.drawable.BitmapDrawable
 import android.graphics.Color as AndroidColor
 import android.graphics.drawable.GradientDrawable
 import android.view.Gravity
@@ -112,8 +117,15 @@ fun MapScreen(
         MapView(ctx).apply {
             setTileSource(TileSourceFactory.MAPNIK)
             setMultiTouchControls(true)
+
             controller.setZoom(16.0)
-            zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
+
+            minZoomLevel = 5.0      // oppure 5.0
+            maxZoomLevel = 20.0
+
+            zoomController.setVisibility(
+                CustomZoomButtonsController.Visibility.NEVER
+            )
         }
     }
 
@@ -133,10 +145,13 @@ fun MapScreen(
         coordinates?.let { coords ->
             val point = GeoPoint(coords.latitude, coords.longitude)
             mapView.controller.setCenter(point)
+
+            val userIcon = createCircleBitmap(ctx)
+
             Marker(mapView).apply {
                 position = point
-                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                title = "Sei qui"
+                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+                icon = userIcon
                 setInfoWindow(null)
                 mapView.overlays.add(this)
             }
@@ -297,4 +312,77 @@ fun MapScreen(
             }
         }
     }
+}
+
+fun createCircleBitmap(
+    context: Context,
+    radiusDp: Float = 10f
+): BitmapDrawable {
+
+    val density = context.resources.displayMetrics.density
+
+    val radius = radiusDp * density
+    val haloRadius = radius * 2.6f
+
+    val size = (haloRadius * 2 + 16 * density).toInt()
+
+    val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+
+    val cx = size / 2.5f
+    val cy = size / 2.5f
+
+    // -----------------------
+    // Alone esterno (azzurro trasparente)
+    // -----------------------
+    val haloPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = AndroidColor.parseColor("#4D4285F4") // circa 30% alpha
+        style = Paint.Style.FILL
+    }
+    canvas.drawCircle(cx, cy, haloRadius, haloPaint)
+
+    // -----------------------
+    // Ombra morbida
+    // -----------------------
+    val shadowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = AndroidColor.BLACK
+        alpha = 35
+        maskFilter = android.graphics.BlurMaskFilter(
+            6 * density,
+            android.graphics.BlurMaskFilter.Blur.NORMAL
+        )
+    }
+
+    canvas.drawCircle(cx, cy + density, radius, shadowPaint)
+
+    // Necessario per disegnare BlurMaskFilter
+    bitmap.setHasAlpha(true)
+
+    // -----------------------
+    // Cerchio blu
+    // -----------------------
+    val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = AndroidColor.parseColor("#1A73E8")
+        style = Paint.Style.FILL
+    }
+
+    canvas.drawCircle(cx, cy, radius, fillPaint)
+
+    // -----------------------
+    // Bordo bianco
+    // -----------------------
+    val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = AndroidColor.WHITE
+        style = Paint.Style.STROKE
+        strokeWidth = radius * 0.28f
+    }
+
+    canvas.drawCircle(
+        cx,
+        cy,
+        radius - borderPaint.strokeWidth / 2,
+        borderPaint
+    )
+
+    return BitmapDrawable(context.resources, bitmap)
 }
