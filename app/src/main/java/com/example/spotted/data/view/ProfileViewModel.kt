@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 data class ProfileUiState(
     val user: User? = null,
     val isLoading: Boolean = true,
-    val isImageUploading: Boolean = false, // Stato specifico per l'upload della foto
+    val isImageUploading: Boolean = false,
     val errorMessage: String? = null,
     val followingCount: Int = 14,
     val ignoredCount: Int = 42,
@@ -61,15 +61,15 @@ class ProfileViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isImageUploading = true) }
 
-            // 1. Carica l'immagine nello Storage di Supabase
+
             when (val uploadResult = userRepository.uploadProfilePicture(bytes, mimeType,userId = currentUser.id)) {
                 is Resource.Success -> {
                     val newImageUrl = uploadResult.data
 
-                    // 2. Aggiorna il record dell'utente nel database con il nuovo URL
+
                     when (val updateResult = userRepository.updateProfile(userId = currentUser.id, profilePicture = newImageUrl)) {
                         is Resource.Success -> {
-                            // Ricarica i dati profilo aggiornati
+
                             loadUserProfile()
                         }
                         is Resource.Error -> {

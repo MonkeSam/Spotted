@@ -14,8 +14,7 @@ object InstantSerializer : KSerializer<Instant> {
     override fun serialize(encoder: Encoder, value: Instant) = encoder.encodeString(value.toString())
     override fun deserialize(decoder: Decoder): Instant {
         val raw = decoder.decodeString()
-        // Supabase restituisce "2024-01-15T18:30:00" senza fuso orario,
-        // Instant.parse() richiede la Z finale per interpretarlo come UTC
+
         val normalized = if (raw.endsWith("Z") || raw.contains("+")) raw else "${raw}Z"
         return Instant.parse(normalized)
     }

@@ -101,7 +101,6 @@ fun FeedScreen(
     }
 }
 
-// ─── SpotCard ─────────────────────────────────────────────────────────────────
 
 @OptIn(ExperimentalTime::class)
 @Composable
@@ -152,7 +151,7 @@ fun SpotCard(
             )
         }
 
-        // ── Contenuto testuale ───────────────────────────────────────────────
+
         Column(
             modifier = Modifier
                 .padding(20.dp)
@@ -185,7 +184,7 @@ fun SpotCard(
                     )
             }
 
-            // Titolo e descrizione — in basso se c'è la foto, centrati altrimenti
+
             Column(
                 modifier = if (spot.photo != null) {
                     Modifier
@@ -222,7 +221,7 @@ fun SpotCard(
             }
         }
 
-        // ── Timbri swipe ─────────────────────────────────────────────────────
+
         SwipeStamp(
             icon        = Icons.Filled.Favorite,
             description = "Follow",
@@ -270,7 +269,7 @@ fun SwipeStamp(
     )
 }
 
-// ─── EmptyFeedState ───────────────────────────────────────────────────────────
+
 
 @Composable
 fun EmptyFeedState() {

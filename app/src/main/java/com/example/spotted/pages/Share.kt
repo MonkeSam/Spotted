@@ -73,35 +73,35 @@ fun ShareScreen(
 
 
 
-    // ── Stati del form ────────────────────────────────────────────────────
+
     var title by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf<Category?>(null) }
     var description by remember { mutableStateOf("") }
 
-    // URI della foto selezionata dall'utente (fotocamera o galleria)
+
     var selectedPhotoUri by remember { mutableStateOf<Uri?>(null) }
 
-    // ── Stato dropdown categoria ───────────────────────────────────────────
+
     var categoryDropdownExpanded by remember { mutableStateOf(false) }
 
-    // ── Stati per la geolocalizzazione ────────────────────────────────────
+
     var address by remember { mutableStateOf("") }
     var coordinates by remember { mutableStateOf<Pair<Double, Double>?>(null) }
     var isSearchingLocation by remember { mutableStateOf(false) }
     var locationError by remember { mutableStateOf(false) }
 
-    // ── Osserviamo gli stati del ViewModel ────────────────────────────────
+
     val isLoading  by viewModel.isLoading.collectAsState()
     val error      by viewModel.error.collectAsState()
     val isSuccess  by viewModel.isSuccess.collectAsState()
     val categories by viewModel.categories.collectAsState()
 
-    // Variabili per salvare la posizione scelta da OpenStreetMap
+
     var latitude by remember { mutableStateOf<Double?>(null) }
     var longitude by remember { mutableStateOf<Double?>(null) }
     var selectedAddressName by remember { mutableStateOf("") }
 
-    // ── Effetto di reset e navigazione al successo ────────────────────────
+
     LaunchedEffect(isSuccess) {
         if (isSuccess) {
             title            = ""
@@ -113,14 +113,14 @@ fun ShareScreen(
         }
     }
 
-    // BOX RADICE
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .padding(innerPadding)
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Colonna scorrevole per il contenuto del form
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -128,7 +128,7 @@ fun ShareScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            // ── Titolo ───────────────────────────────────────────────────────
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -165,7 +165,7 @@ fun ShareScreen(
 
             }
 
-            // ── Form Principale ──────────────────────────────────────────────
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -173,7 +173,7 @@ fun ShareScreen(
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
 
-                // ── Dettagli Spot ────────────────────────────────────────────
+
                 Column {
                     SectionLabel("DETTAGLI SPOT")
                     Surface(
@@ -184,7 +184,7 @@ fun ShareScreen(
                             modifier = Modifier.padding(16.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            // Titolo
+
                             OutlinedTextField(
                                 value = title,
                                 onValueChange = { title = it },
@@ -195,7 +195,7 @@ fun ShareScreen(
                                 enabled = !isLoading
                             )
 
-                            // ── Dropdown Categoria ───────────────────────────
+
                             ExposedDropdownMenuBox(
                                 expanded = categoryDropdownExpanded && !isLoading,
                                 onExpandedChange = {
@@ -265,7 +265,7 @@ fun ShareScreen(
                                 }
                             }
 
-                            // Descrizione
+
                             OutlinedTextField(
                                 value = description,
                                 onValueChange = { description = it },
@@ -280,7 +280,7 @@ fun ShareScreen(
                     }
                 }
 
-                // ── Posizione con Autocomplete OSM ───────────────────────────
+
                 OSMAddressAutocompleteField(
                     modifier = Modifier.fillMaxWidth(),
                     onLocationSelected = { lat, lon, addr ->
@@ -290,7 +290,6 @@ fun ShareScreen(
                     }
                 )
 
-                // Feedback visivo posizione agganciata
                 if (latitude != null && longitude != null) {
                     Text(
                         text = "📍 Posizione agganciata correttamente!",
@@ -299,7 +298,7 @@ fun ShareScreen(
                     )
                 }
 
-                // ── Media (Opzionale) ────────────────────────────────────────
+
                 Column {
                     SectionLabel("MEDIA (OPZIONALE)")
                     Surface(
@@ -318,7 +317,7 @@ fun ShareScreen(
                     }
                 }
 
-                // ── Errori Supabase ──────────────────────────────────────────
+
                 if (error != null) {
                     Text(
                         text = error ?: "Errore sconosciuto",
@@ -329,16 +328,16 @@ fun ShareScreen(
                 }
             }
 
-            // Spazio protettivo finale aumentato leggermente per compensare l'intera barra
+
             Spacer(modifier = Modifier.height(90.dp))
         }
 
-        // ── 🎯 BARRA INFERIORE COPRENTE (NON TRASPARENTE) ──────────────────────
+
         Surface(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth(),
-            color = MaterialTheme.colorScheme.background // Colore solido uguale allo sfondo dello schermo
+            color = MaterialTheme.colorScheme.background
         ) {
             Button(
                 onClick = {
@@ -364,7 +363,7 @@ fun ShareScreen(
                     )
                 },
                 modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 16.dp) // Il padding interno spinge i bordi della barra opaca
+                    .padding(horizontal = 16.dp, vertical = 16.dp)
                     .fillMaxWidth()
                     .height(52.dp),
                 enabled = !isLoading
@@ -388,13 +387,13 @@ fun ShareScreen(
             hostState = snackbarHostState,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 84.dp) // 52dp altezza bottone + 16dp padding top + 16dp padding bottom
+                .padding(bottom = 84.dp)
         )
     }
 }
 
 
-// ── Componenti privati ────────────────────────────────────────────────────────
+
 
 @Composable
 private fun SectionLabel(text: String) {
@@ -439,7 +438,7 @@ fun OSMAddressAutocompleteField(
     var isDropdownExpanded by remember { mutableStateOf(false) }
     var isSearching by remember { mutableStateOf(false) }
 
-    // Effetto Debounce
+
     LaunchedEffect(searchQuery) {
         if (searchQuery.length >= 3) {
             isSearching = true

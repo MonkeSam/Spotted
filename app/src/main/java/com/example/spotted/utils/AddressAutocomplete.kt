@@ -20,14 +20,14 @@ suspend fun searchAddressOSM(query: String): List<OSMPlace> {
 
     return withContext(Dispatchers.IO) {
         try {
-            // Codifica la stringa di ricerca per l'URL (es: spazi in %20)
+
             val encodedQuery = URLEncoder.encode(query, "UTF-8")
             val urlString = "https://nominatim.openstreetmap.org/search?q=$encodedQuery&format=json&limit=5&addressdetails=1"
 
             val url = URL(urlString)
             val connection = url.openConnection() as HttpURLConnection
 
-            // FONDAMENTALE per le policy di OpenStreetMap: identifica la tua app
+
             connection.setRequestProperty("User-Agent", "SpottedApp/1.0 (unibo.studenti.app)")
             connection.connectTimeout = 5000
             connection.readTimeout = 5000

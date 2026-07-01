@@ -30,7 +30,7 @@ import org.koin.androidx.compose.koinViewModel
 import kotlin.time.ExperimentalTime
 
 
-// ─── FollowingScreen ─────────────────────────────────────────────────────────
+
 
 @Composable
 fun FollowingScreen(innerPadding: PaddingValues, navigate: (Long) -> Unit) {
@@ -42,7 +42,7 @@ fun FollowingScreen(innerPadding: PaddingValues, navigate: (Long) -> Unit) {
     val categories     by viewModel.categories.collectAsState()
     val isLoading      by viewModel.isLoading.collectAsState()
 
-    // Ricarica ogni volta che la schermata torna visibile
+
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -90,7 +90,7 @@ fun FollowingScreen(innerPadding: PaddingValues, navigate: (Long) -> Unit) {
     }
 }
 
-// ─── SectionHeader ───────────────────────────────────────────────────────────
+
 
 @Composable
 fun SectionHeader(
@@ -131,7 +131,7 @@ fun SectionHeader(
     }
 }
 
-// ─── FollowedSpotItem ─────────────────────────────────────────────────────────
+
 
 @OptIn(ExperimentalTime::class)
 @Composable
@@ -158,7 +158,7 @@ fun FollowedSpotItem(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
 
-            // ── Emoji categoria (da db) ───────────────────────────────────
+
             Box(
                 modifier         = Modifier
                     .size(44.dp)
@@ -171,12 +171,12 @@ fun FollowedSpotItem(
                 )
             }
 
-            // ── Testo centrale ───────────────────────────────────────────
+
             Column(
                 modifier            = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(3.dp),
             ) {
-                // Badge nome categoria + status dot
+
                 Row(
                     verticalAlignment     = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -190,7 +190,7 @@ fun FollowedSpotItem(
                             modifier   = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                         )
                     }
-                    // Status dot
+
                     Box(
                         modifier = Modifier
                             .size(6.dp)
@@ -199,7 +199,7 @@ fun FollowedSpotItem(
                     )
                 }
 
-                // Titolo spot
+
                 spot.title?.let {
                     Text(
                         text       = it,
@@ -211,7 +211,7 @@ fun FollowedSpotItem(
                     )
                 }
 
-                // Ultimo messaggio (preview)
+
                 if (lastMessage != null) {
                     Text(
                         text     = lastMessage.message,
@@ -230,7 +230,7 @@ fun FollowedSpotItem(
                     )
                 }
 
-                // Stats: nome categoria · tempo
+
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment     = Alignment.CenterVertically,
@@ -245,7 +245,7 @@ fun FollowedSpotItem(
                             modifier = Modifier.size(11.dp),
                             tint     = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                        // Nome categoria al posto del titolo ripetuto
+
                         Text(
                             text     = category?.name ?: spot.category.toString(),
                             fontSize = 11.sp,
@@ -263,7 +263,7 @@ fun FollowedSpotItem(
     }
 }
 
-// ─── EmptyFollowingState ──────────────────────────────────────────────────────
+
 
 @Composable
 fun EmptyFollowingState(innerPadding: PaddingValues) {

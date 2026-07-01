@@ -41,7 +41,7 @@ import org.koin.androidx.compose.koinViewModel
 fun LoginScreen(
     innerPadding: PaddingValues,
     navigate: () -> Unit,
-    navigateToSignup: () -> Unit // ✅ 1. Nuovo parametro per la navigazione
+    navigateToSignup: () -> Unit
 ) {
     var email by remember { mutableStateOf(String()) }
     var password by remember { mutableStateOf(String()) }
@@ -52,13 +52,13 @@ fun LoginScreen(
 
     val isLoading by viewModel.isLoading.collectAsState()
 
-    // Osserva l'utente e naviga quando il login ha successo
+
     val user by viewModel.user.collectAsState()
     LaunchedEffect(user) {
         if (user != null) navigate()
     }
 
-    // Osserva l'errore per mostrarlo all'utente
+
     val error by viewModel.error.collectAsState()
 
     Box(
@@ -115,10 +115,6 @@ fun LoginScreen(
                     isError = passwordError,
                 )
 
-
-
-
-                // Gestione errore: locale ha priorità, altrimenti controlla risposta Supabase
                 val displayError = localError ?: error
                 if (displayError != null) {
                     Text(
@@ -160,7 +156,6 @@ fun LoginScreen(
                     Text(if (isLoading) "Caricamento..." else "Accedi")
                 }
 
-                // ✅ 2. Aggiunto TextButton per andare alla schermata di Registrazione
                 TextButton(
                     onClick = navigateToSignup,
                     modifier = Modifier.fillMaxWidth()

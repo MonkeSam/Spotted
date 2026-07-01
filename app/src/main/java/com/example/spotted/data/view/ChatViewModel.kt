@@ -24,7 +24,7 @@ class ChatViewModel(
     private val messageRepository: MessageRepository
 ) : ViewModel() {
 
-    // Stato di autenticazione (osservabile)
+    // Stato di autenticazione
     private val _currentUserId = MutableStateFlow<String?>(null)
     val currentUserId: StateFlow<String?> = _currentUserId.asStateFlow()
 
@@ -49,7 +49,6 @@ class ChatViewModel(
     private var realtimeJob: Job? = null
 
     init {
-        // Recupera l'ID utente corrente all'avvio e aggiorna il flusso
         viewModelScope.launch {
             _currentUserId.value = SupabaseModule.client.auth.currentUserOrNull()?.id
         }
@@ -102,21 +101,18 @@ class ChatViewModel(
     private fun startRealtime(chatId: Long, uid: String) {
         realtimeJob?.cancel()
         realtimeJob = viewModelScope.launch {
-            messageRepository.stopListening()          // Pulisce il vecchio canale
+            messageRepository.stopListening()
             val flow = messageRepository.observeNewMessages(chatId)
 
-            // 🔑 SOLUZIONE: Lanciamo la collect in un blocco launch separato.
-            // In questo modo il listener si registra sul canale IMMEDIATAMENTE.
             launch {
                 flow.collect { newMessage ->
-                    if (_messages.value.none { it.id == newMessage.id }) {
-                        _messages.value = _messages.value + newMessage
-                    }
+                    _messages.value = _messages.value
+                        .filterNot { it.id < 0 && it.userId == newMessage.userId && it.message == newMessage.message }
+                        .let { list ->
+                            if (list.any { it.id == newMessage.id }) list else list + newMessage
+                        }
                 }
             }
-
-            // Ora che il flow è in ascolto sul canale locale,
-            // diciamo a Supabase di attivare la sottoscrizione globale.
             messageRepository.startListening()
         }
     }
@@ -126,7 +122,9 @@ class ChatViewModel(
         val trimmed = text.trim()
         if (trimmed.isEmpty()) return
 
+        val localId = -System.nanoTime()
         val tempMessage = Message(
+            id = localId,
             userId = uid,
             message = trimmed,
             chatId = chatId,
@@ -137,7 +135,10 @@ class ChatViewModel(
         viewModelScope.launch {
             _isSending.value = true
             when (val result = messageRepository.sendMessage(uid, chatId, trimmed)) {
-                is Resource.Error -> _error.value = result.message
+                is Resource.Error -> {
+                    _error.value = result.message
+                    _messages.value = _messages.value.filterNot { it.id == localId }
+                }
                 else -> {}
             }
             _isSending.value = false

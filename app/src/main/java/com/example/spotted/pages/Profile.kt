@@ -59,11 +59,10 @@ fun ProfileScreen(
     val context = LocalContext.current
     val activity = LocalActivity.current!!
     val (snackbarHostState, onPermissionDenied) = rememberPermissionDeniedHandler()
-    // Stati per la gestione della foto e dei permessi
+
     var showDialogChooser by remember { mutableStateOf(false) }
     var cameraImageUri by remember { mutableStateOf<Uri?>(null) }
 
-    // Funzione helper per convertire Uri in ByteArray (MimeType fisso o dinamico)
     fun handleSelectedUri(uri: Uri) {
         try {
             val inputStream = context.contentResolver.openInputStream(uri)
@@ -99,14 +98,14 @@ fun ProfileScreen(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            val uri = createSignupImageUri(context) // createImageUri in Profile.kt
+            val uri = createSignupImageUri(context)
             cameraImageUri = uri
             cameraLauncher.launch(uri)
         } else {
             val permanentlyDenied = !activity.shouldShowRequestPermissionRationale(
                 Manifest.permission.CAMERA
             )
-            onPermissionDenied(permanentlyDenied) // ← una sola riga
+            onPermissionDenied(permanentlyDenied)
         }
     }
 
@@ -131,14 +130,14 @@ fun ProfileScreen(
                         .padding(vertical = 28.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Struttura a Box sovrapposti (Avatar + Bottone di Edit in basso a destra)
+
                     Box(
                         modifier = Modifier
                             .size(100.dp)
                             .clickable { showDialogChooser = true },
                         contentAlignment = Alignment.BottomEnd
                     ) {
-                        // Cerchio Principale Avatar
+
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -175,7 +174,6 @@ fun ProfileScreen(
                             }
                         }
 
-                        // Badge della Matita posizionato in basso a destra
                         Box(
                             modifier = Modifier
                                 .size(32.dp)
@@ -244,7 +242,7 @@ fun ProfileScreen(
                     )
                 }
 
-                // Messaggio di errore se presente
+
                 state.errorMessage?.let { msg ->
                     Text(
                         text = msg,
@@ -264,7 +262,7 @@ fun ProfileScreen(
     }
 
 
-    // Dialog Classico di scelta sorgente Foto (Galleria o Fotocamera)
+
     if (showDialogChooser) {
         AlertDialog(
             onDismissRequest = { showDialogChooser = false },
@@ -297,7 +295,7 @@ fun ProfileScreen(
     }
 }
 
-// Funzione di utilità per creare un URI temporaneo per la fotocamera
+
 private fun createSignupImageUri(context: Context): Uri {
     val tempFile = File.createTempFile("signup_capture_", ".jpg", context.cacheDir).apply {
         createNewFile()

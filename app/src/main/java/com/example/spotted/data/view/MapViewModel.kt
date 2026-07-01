@@ -33,7 +33,7 @@ class MapViewModel(
                         it.latitude != null && it.longitude != null
                     }
                 }
-                is Resource.Error   -> { /* silenzioso: la mappa rimane senza pin */ }
+                is Resource.Error   -> {}
                 is Resource.Loading -> {}
             }
         }

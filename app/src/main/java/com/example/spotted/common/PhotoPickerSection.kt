@@ -81,21 +81,21 @@ fun PhotoPickerSection(
         FileProvider.getUriForFile(context, "${context.packageName}.provider", tempFile)
     }
 
-    // ── Launcher fotocamera ──────────────────────────────────────────────
+    //Launcher fotocamera
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
         if (success) onPhotoSelected(cameraUri)
     }
 
-    // ── Launcher galleria ────────────────────────────────────────────────
+    //Launcher galleria
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
         uri?.let { onPhotoSelected(it) }
     }
 
-    // ── Launcher permesso fotocamera ─────────────────────────────────────
+    //Launcher permesso fotocamera
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { granted ->
@@ -109,7 +109,7 @@ fun PhotoPickerSection(
         }
     }
 
-    // ── Launcher permesso storage (galleria) ─────────────────────────────
+    //Launcher permesso storage (galleria)
     val storagePermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { granted ->
@@ -125,11 +125,11 @@ fun PhotoPickerSection(
         }
     }
 
-    // ── Funzioni di avvio con controllo permessi ─────────────────────────
+
     fun launchCamera() {
         when {
             ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
-                    == PackageManager.PERMISSION_GRANTED -> cameraLauncher.launch(cameraUri)
+                    == PackageManager.PERMISSION_GRANTED -> cameraLauncher.launch(cameraUri)  //Controllo permessi
             else -> cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
         }
     }
@@ -147,10 +147,8 @@ fun PhotoPickerSection(
         }
     }
 
-    // ── UI ───────────────────────────────────────────────────────────────
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
 
-        // Anteprima o placeholder
         if (selectedUri != null) {
             Box(modifier = Modifier.fillMaxWidth()) {
                 AsyncImage(
@@ -162,7 +160,7 @@ fun PhotoPickerSection(
                         .clip(RoundedCornerShape(12.dp)),
                     contentScale = ContentScale.Crop
                 )
-                // Pulsante rimozione foto in alto a destra
+
                 IconButton(
                     onClick = onPhotoRemoved,
                     enabled = enabled,
@@ -180,7 +178,7 @@ fun PhotoPickerSection(
                 }
             }
         } else {
-            // Placeholder quando non è selezionata nessuna foto
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -212,7 +210,7 @@ fun PhotoPickerSection(
             }
         }
 
-        // Pulsanti fotocamera / galleria
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)

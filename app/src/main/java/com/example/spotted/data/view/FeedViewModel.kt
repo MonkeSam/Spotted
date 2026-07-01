@@ -28,14 +28,13 @@ class FeedViewModel(
     private val _posts = MutableStateFlow<List<Post>>(emptyList())
     val posts: StateFlow<List<Post>> = _posts
 
-    // Mappa categoryId → Category, per risolvere emoji e nome nel composable
+
     private val _categories = MutableStateFlow<Map<Int, Category>>(emptyMap())
     val categories: StateFlow<Map<Int, Category>> = _categories
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
-    // Recupera l'uid una volta sola al momento della creazione del ViewModel
     private val userId: String? = SupabaseModule.client.auth.currentUserOrNull()?.id
 
     init {
@@ -76,13 +75,13 @@ class FeedViewModel(
 
     fun swipeRight(postId: Long) {
         val uid = userId ?: return
-        _posts.value = _posts.value.filter { it.id != postId } // rimozione ottimistica
+        _posts.value = _posts.value.filter { it.id != postId }
         viewModelScope.launch { followRepository.followPost(uid, postId) }
     }
 
     fun swipeLeft(postId: Long) {
         val uid = userId ?: return
-        _posts.value = _posts.value.filter { it.id != postId } // rimozione ottimistica
+        _posts.value = _posts.value.filter { it.id != postId }
         viewModelScope.launch { discardedRepository.discardPost(uid, postId) }
     }
     @OptIn(ExperimentalTime::class)

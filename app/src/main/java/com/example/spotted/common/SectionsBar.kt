@@ -33,19 +33,19 @@ import com.example.spotted.ui.theme.AppLogo
 import com.example.spotted.utils.NavigationRoute
 import com.example.spotted.utils.Sections
 
-// 1. Definiamo la struttura dati per le nostre schede della barra
+
 data class BarItem(
     val title: String,
     val icon: ImageVector,
-    val route: Any // Accetta le tue classi/oggetti di NavigationRoute
+    val route: Any
 )
 
 @Composable
 fun SectionsBar(
-    navController: NavController, // Passiamo direttamente il navController
+    navController: NavController,
     modifier: Modifier = Modifier.fillMaxWidth()
 ) {
-    // 2. Creiamo la lista degli elementi associati alle rotte reali
+
     val items = listOf(
         BarItem(Sections.FEED.name, Icons.Filled.Home, NavigationRoute.Feed),
         BarItem(Sections.FOLLOWING.name, Icons.Filled.Favorite, NavigationRoute.Following),
@@ -54,7 +54,7 @@ fun SectionsBar(
 
     )
 
-    // 3. Osserviamo la rotta corrente in modo reattivo
+
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
@@ -62,18 +62,18 @@ fun SectionsBar(
         modifier = modifier,
         containerColor = Color.Transparent
     ) {
-        // 4. Iteriamo sulla lista per creare i NavigationBarItem
+
         items.forEach { item ->
-            // Controlla dinamicamente se la destinazione corrente corrisponde alla rotta dell'item
+
             val isSelected = currentDestination?.hasRoute(item.route::class) == true
 
             NavigationBarItem(
                 selected = isSelected,
                 onClick = {
-                    // Evita di ricaricare la pagina se siamo già lì
+
                     if (!isSelected) {
                         navController.navigate(item.route) {
-                            // Riconduce la navigazione alla destinazione iniziale per non accumulare stack
+
                             popUpTo(navController.graph.startDestinationId) {
                                 saveState = true
                             }

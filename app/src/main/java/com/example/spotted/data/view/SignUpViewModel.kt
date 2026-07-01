@@ -25,7 +25,7 @@ class SignupViewModel(
     fun register(email: String, password: String, name: String, surname: String, imageBytes: ByteArray?, mimeType: String) {
         viewModelScope.launch {
             _isLoading.value = true
-            // Passa TUTTI i parametri al repository
+
             val result = userRepository.register(email, password, name, surname, imageBytes, mimeType)
 
             when (result) {

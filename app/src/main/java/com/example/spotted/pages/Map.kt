@@ -76,7 +76,7 @@ fun MapScreen(
     val mapViewModel: MapViewModel = koinViewModel()
     val followedPosts by mapViewModel.followedPosts.collectAsState()
 
-    // Stato reattivo locale per decidere se mostrare la Mappa o la schermata NoGps
+
     var hasLocationPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
@@ -94,7 +94,6 @@ fun MapScreen(
         }
     }
 
-    // Unico punto di ingresso iniziale controllato
     LaunchedEffect(Unit) {
         if (hasLocationPermission) {
             locationService.getCurrentLocation()
@@ -232,7 +231,7 @@ fun MapScreen(
                     mapView.onResume()
                     mapViewModel.loadFollowedPostsWithLocation()
 
-                    // Rileva se l'utente ha garantito i permessi tornando dalle impostazioni di sistema
+
                     val coarseGranted = ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
                     val fineGranted = ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
 
@@ -255,7 +254,7 @@ fun MapScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         if (hasLocationPermission) {
-            // Se i permessi sono attivi, la mappa riempie lo schermo (disegnando anche sotto le barre sfocate)
+
             AndroidView(
                 factory  = { mapView },
                 modifier = Modifier.fillMaxSize()
@@ -332,18 +331,14 @@ fun createCircleBitmap(
     val cx = size / 2.5f
     val cy = size / 2.5f
 
-    // -----------------------
-    // Alone esterno (azzurro trasparente)
-    // -----------------------
+
     val haloPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = AndroidColor.parseColor("#4D4285F4") // circa 30% alpha
         style = Paint.Style.FILL
     }
     canvas.drawCircle(cx, cy, haloRadius, haloPaint)
 
-    // -----------------------
-    // Ombra morbida
-    // -----------------------
+
     val shadowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = AndroidColor.BLACK
         alpha = 35
@@ -355,12 +350,9 @@ fun createCircleBitmap(
 
     canvas.drawCircle(cx, cy + density, radius, shadowPaint)
 
-    // Necessario per disegnare BlurMaskFilter
+
     bitmap.setHasAlpha(true)
 
-    // -----------------------
-    // Cerchio blu
-    // -----------------------
     val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = AndroidColor.parseColor("#1A73E8")
         style = Paint.Style.FILL
@@ -368,9 +360,7 @@ fun createCircleBitmap(
 
     canvas.drawCircle(cx, cy, radius, fillPaint)
 
-    // -----------------------
-    // Bordo bianco
-    // -----------------------
+
     val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = AndroidColor.WHITE
         style = Paint.Style.STROKE

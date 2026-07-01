@@ -22,14 +22,14 @@ import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.sign
 
-// ─── Soglie ──────────────────────────────────────────────────────────────────
+
 
 private const val SWIPE_THRESHOLD_FRACTION  = 0.38f  // % larghezza schermo
 private const val VELOCITY_THRESHOLD        = 900f   // px/s per swipe veloce
 private const val MAX_ROTATION_DEG          = 12f    // rotazione massima card
 private const val FLY_OFF_MULTIPLIER        = 1.6f   // moltiplicatore fly-off
 
-// ─── Controller ──────────────────────────────────────────────────────────────
+
 
 /**
  * Permette di triggerare lo swipe da pulsanti esterni (es. ♥ e ✕ nella UI).
@@ -86,12 +86,11 @@ fun <T> SwipeCardStack(
     // Indice della card in cima allo stack
     var topIndex by remember(items) { mutableIntStateOf(0) }
 
-    // Offset della card in cima (le card dietro non si muovono con il dito)
+    // Offset della card in cima
     val offsetX = remember { Animatable(0f) }
     val offsetY = remember { Animatable(0f) }
 
-    // ── Funzione condivisa tra gesture e controller ──────────────────────────
-
+    // Come la card si stacca
     suspend fun flyOff(dir: Float, item: T) {
         coroutineScope {
             launch { offsetX.animateTo(screenWidthPx * FLY_OFF_MULTIPLIER * dir, tween(320)) }
@@ -146,7 +145,7 @@ fun <T> SwipeCardStack(
 
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
 
-        // Card dietro (al massimo 2, disegnate prima = sotto)
+        // Card dietro (al massimo 2)
         for (i in minOf(topIndex + 2, items.lastIndex) downTo topIndex + 1) {
             val stackPos = i - topIndex          // 1 o 2
             val drag     = (abs(offsetX.value) / threshold).coerceIn(0f, 1f)
@@ -166,7 +165,7 @@ fun <T> SwipeCardStack(
             }
         }
 
-        // Card in cima (interattiva)
+        // Top card
         val velocityTracker = remember { VelocityTracker() }
 
         Box(
@@ -177,7 +176,7 @@ fun <T> SwipeCardStack(
                     translationY = offsetY.value
                     rotationZ    = swipeProgress * MAX_ROTATION_DEG
                 }
-                .pointerInput(topIndex) {          // chiave = topIndex: si resetta a ogni swipe
+                .pointerInput(topIndex) {
                     detectDragGestures(
                         onDragStart  = { velocityTracker.resetTracking() },
                         onDragCancel = { scope.launch { snapBack() } },

@@ -77,6 +77,7 @@ fun SignupScreen(
     var surname by remember { mutableStateOf("") }
     val activity = LocalActivity.current!!
     val (snackbarHostState, onPermissionDenied) = rememberPermissionDeniedHandler()
+
     // Stati per la gestione della foto e dei permessi
     var showDialogChooser by remember { mutableStateOf(false) }
     var cameraImageUri by remember { mutableStateOf<Uri?>(null) }
@@ -90,7 +91,7 @@ fun SignupScreen(
     var emailError by remember { mutableStateOf(false) }
     var imageError by remember { mutableStateOf(false) }
 
-    // ── Launchers ────────────────────────────────────────────────────────
+
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -111,14 +112,14 @@ fun SignupScreen(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            val uri = createSignupImageUri(context) // createImageUri in Profile.kt
+            val uri = createSignupImageUri(context)
             cameraImageUri = uri
             cameraLauncher.launch(uri)
         } else {
             val permanentlyDenied = !activity.shouldShowRequestPermissionRationale(
                 Manifest.permission.CAMERA
             )
-            onPermissionDenied(permanentlyDenied) // ← una sola riga
+            onPermissionDenied(permanentlyDenied)
         }
     }
 
@@ -153,7 +154,7 @@ fun SignupScreen(
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
 
-                    // 📸 Componente per selezionare l'immagine del profilo
+
                     Box(
                         modifier = Modifier
                             .size(100.dp)
@@ -327,7 +328,7 @@ fun SignupScreen(
         )
     }
 
-    // ── Dialog Scelta Foto ───────────────────────────────────────────────
+
     if (showDialogChooser) {
         AlertDialog(
             onDismissRequest = { showDialogChooser = false },
@@ -360,8 +361,7 @@ fun SignupScreen(
     }
 }
 
-// Funzione di utilità per creare un URI temporaneo per la fotocamera.
-// Rinominata per evitare conflitti con quella in Profile.kt
+
 private fun createSignupImageUri(context: Context): Uri {
     val tempFile = File.createTempFile("signup_capture_", ".jpg", context.cacheDir).apply {
         createNewFile()

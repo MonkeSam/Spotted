@@ -33,7 +33,7 @@ class ShareViewModel(
     private val _isSuccess = MutableStateFlow(false)
     val isSuccess: StateFlow<Boolean> = _isSuccess.asStateFlow()
 
-    // Lista ordinata di categorie per il dropdown
+
     private val _categories = MutableStateFlow<List<Category>>(emptyList())
     val categories: StateFlow<List<Category>> = _categories.asStateFlow()
 
@@ -84,7 +84,7 @@ class ShareViewModel(
             _error.value     = null
             _isSuccess.value = false
 
-            // ── 1. Upload foto (opzionale) ───────────────────────────────
+
             var photoUrl: String? = null
             if (photoBytes != null) {
                 when (val uploadResult = storageRepository.uploadPostPhoto(photoBytes, photoMime)) {
@@ -98,7 +98,7 @@ class ShareViewModel(
                 }
             }
 
-            // ── 2. Creazione Post con URL foto (null se non caricata) ────
+
             val newPost = Post(
                 category    = category,
                 title       = title,
